@@ -1,0 +1,20 @@
+[package]
+name = 'bmake'
+slug = 'bmake'
+version = ''
+authors = ['Edwin Kofler <edwin@kofler.dev>']
+description = 'A Bash-based Make alternative'
+
+[run]
+dependencies = []
+sourceDirs = []
+builtinDirs = []
+binDirs = ['pkg/bin']
+completionDirs = []
+manDirs = []
+
+[run.shellEnvironment]
+
+[run.setOptions]
+
+[run.shoptOptions]
