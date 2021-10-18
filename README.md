@@ -51,3 +51,11 @@ Environment variable with the absolute path to the directory that contains the `
 #### `run()`
 
 Run a command and exit on failure
+
+#### `die()`
+
+#### `error`
+
+#### `warn()`
+
+### `info()`
