@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-eval "$(basalt-package-init)"; basalt.package-init
-basalt.package-load
-
-source "$BASALT_PACKAGE_PATH/pkg/lib/cmd/bmake.sh"
-bmake.main "$@"
