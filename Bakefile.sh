@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 
-task.run() {
-	ls -al
-}
+dobad() { echo 'doing bad'; return 2; }
 
 task.seven() {
-	false
+	if [ -e fakefile ]; then
+		echo is handled
+	fi
+	false || echo not
+	echo 'going to fail'
+	dobad
+	echo $?
+	echo 'after failure'
 }

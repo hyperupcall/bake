@@ -21,7 +21,7 @@ main.bake() {
 
 	cat >| "$BAKE_ROOT/bake" <<EOF
 #!/usr/bin/env bash
-set -eo pipefail
+set -ETeo pipefail
 set -- "\${1:-}"
 
 if [ "\$0" != "\${BASH_SOURCE[0]}" ]; then
@@ -29,7 +29,7 @@ if [ "\$0" != "\${BASH_SOURCE[0]}" ]; then
 	return 1
 fi
 
-if ! BAKEFILE_ROOT="\$(
+if ! BAKE_ROOT="\$(
 	while [ ! -f 'bake' ] && [ "\$PWD" != / ]; do
 		if ! cd ..; then
 			printf '%s\n' "Error: Could not cd .."
@@ -46,10 +46,14 @@ if ! BAKEFILE_ROOT="\$(
 )"; then
 	exit 1
 fi
-export BAKEFILE_ROOT
+export BAKE_ROOT
 
 # shellcheck disable=SC2097,SC1007,SC2098
-BAKEFILE_ROOT= source "\$BAKEFILE_ROOT/Bakefile.sh"
+if ! BAKE_ROOT= source "\$BAKE_ROOT/Bakefile.sh"; then
+	printf '%s\n' "Error: Could not source '\$BAKE_ROOT/Bakefile.sh'"
+	exit 1
+fi
+# BAKE_ROOT= eval "\$(<"\$BAKE_ROOT/Bakefile.sh")"
 
 die() {
 	if ((\$# == 1)); then
@@ -64,7 +68,6 @@ die() {
 
 	exit "\$1"
 }
-
 
 error() {
 	if [[ -v NO_COLOR || \$TERM = dumb ]]; then
@@ -82,7 +85,6 @@ warn() {
 	fi
 }
 
-
 info() {
 	if [[ -v NO_COLOR || \$TERM = dumb ]]; then
 		printf "%s\n" "Info: \$1"
@@ -91,8 +93,7 @@ info() {
 	fi
 }
 
-
-ensure() {
+run() {
 	if ! "\$@"; then
 		printf '%s\n' "Error: Command '\$*'  failed to run successfully"
 		exit 1
@@ -107,8 +108,6 @@ fi
 if declare -f task."\$1" >/dev/null 2>&1; then
 	if ! task."\$1"; then
 		printf '%s\n' "Error: Task '\$1' failed"
-			echo \${FUNCNAME[*]}
-
 		exit 1
 	fi
 else

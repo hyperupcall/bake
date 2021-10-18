@@ -4,9 +4,7 @@ A Bash-based Make alternative
 
 ## Why?
 
-Notwithstanding the fact that Make was not built to be a task runner, Makefiles are commonly used for running tasks
-
-Make is inflexible and not ergonomic. Let's use what makes the most sense: Bash
+Make is not meant to be used as a task runner. Why not use what already makes sense: Bash
 
 All you have to do is create a `Bakefile.sh`
 
@@ -29,8 +27,6 @@ bake deploy
 
 This will automatically create a `./bake`, that you can use to execute your tasks in CI, or for those that don't have `bake`. All you need is Bash
 
-Bake solves this by providing a simple framework for executing tasks, which are sensibly defined by Bash functions. Furthermore, a few tiny boilerplate functions are provided to make task execution possible without the `bake` executable (with pure Bash)
-
 ## Installation
 
 Use [Basalt](https://github.com/hyperupcall/basalt), a Bash package manager, to install this project globally
@@ -39,8 +35,19 @@ Use [Basalt](https://github.com/hyperupcall/basalt), a Bash package manager, to 
 basalt global add hyperupcall/bake
 ```
 
+## Bugs
+
+- `set -e` doesn't work properly
+
+
 ## Reference
+
+Use these environment variables and functions _within tasks_ of your Bakefile
 
 #### `BAKE_ROOT`
 
 Environment variable with the absolute path to the directory that contains the `Bakefile.sh`
+
+#### `run()`
+
+Run a command and exit on failure
