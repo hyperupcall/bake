@@ -54,11 +54,22 @@ __bake_is_color() {
 # @description Prints `$1` formatted as a Bake error to standard error
 # @arg $1 Text to print
 # @internal
-__bake_error() {
+__bake_internal_error() {
 	if __bake_is_color; then
 		printf "\033[0;31m%s\033[0m: %s\n" "Error (bake)" "$1" >&2
 	else
 		printf '%s: %s\n' 'Error (bake)' "$1" >&2
+	fi
+}
+
+# @description Prints `$1` formatted as an error to standard error
+# @arg $1 string Text to print
+# @internal
+__bake_error() {
+	if __bake_is_color; then
+		printf "\033[0;31m%s\033[0m: %s\n" 'Error' "$1" >&2
+	else
+		printf '%s: %s\n' 'Error' "$1" >&2
 	fi
 }
 
@@ -105,23 +116,14 @@ __bake_print_big() {
 # @description Prints `$1` formatted as an error to standard error, then exits with code 1
 # @arg $1 string Text to print
 die() {
+	__bake_print_big "<- ERROR"
+
 	if [ -n "$1" ]; then
-		error "$1. Exiting"
+		__bake_error "$1. Exiting"
 	else
-		error 'Exiting'
+		__bake_error 'Exiting'
 	fi
-
 	exit 1
-}
-
-# @description Prints `$1` formatted as an error to standard error
-# @arg $1 string Text to print
-error() {
-	if __bake_is_color; then
-		printf "\033[0;31m%s\033[0m: %s\n" 'Error' "$1" >&2
-	else
-		printf '%s: %s\n' 'Error' "$1" >&2
-	fi
 }
 
 # @description Prints `$1` formatted as a warning to standard error
@@ -144,6 +146,19 @@ info() {
 	fi
 }
 
+# @description Dies if any of the supplied variables are empty
+# @arg $@ string Variable names to print
+assert.nonempty() {
+	local variable_name=
+	for variable_name; do
+		local -n variable="$variable_name"
+
+		if [ -z "$variable" ]; then
+			die "Variable '$variable_name' is empty"
+		fi
+	done
+}
+
 # Note: Don't do `command -v` with anything related to `Bakefile.sh`, since `errexit` won't work
 main() {
 	set -Eeo pipefail
@@ -156,14 +171,13 @@ main() {
 	set -- "${@:2}"
 
 	if [ -z "$task" ]; then
-		__bake_error "No valid task supplied"
+		__bake_internal_error "No valid task supplied"
 		__bake_print_tasks >&2
-
 		exit 1
 	fi
 
 	if ! cd "$BAKE_ROOT"; then
-		__bake_error "cd failed"
+		__bake_internal_error "cd failed"
 		exit 1
 	fi
 
@@ -175,7 +189,7 @@ main() {
 		task."$task" "$@"
 		__bake_print_big "<- DONE"
 	else
-		__bake_error "Task '$task' not found"
+		__bake_internal_error "Task '$task' not found"
 		__bake_print_tasks >&2
 		exit 1
 	fi

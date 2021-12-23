@@ -20,21 +20,13 @@ Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 ## Index
 
 * [die()](#die)
-* [error()](#error)
 * [warn()](#warn)
 * [info()](#info)
+* [assert.nonempty()](#assertnonempty)
 
 ### die()
 
 Prints `$1` formatted as an error to standard error, then exits with code 1
-
-#### Arguments
-
-* **$1** (string): Text to print
-
-### error()
-
-Prints `$1` formatted as an error to standard error
 
 #### Arguments
 
@@ -55,4 +47,12 @@ Prints `$1` formatted as information to standard output
 #### Arguments
 
 * **$1** (string): Text to print
+
+### assert.nonempty()
+
+Dies if any of the supplied variables are empty
+
+#### Arguments
+
+* **...** (string): Variable names to print
 

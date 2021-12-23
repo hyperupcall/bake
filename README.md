@@ -70,7 +70,7 @@ To sum it up, _it just works_
 
 - Generates a `./bake` file, for use in CI, etc.
 - _Stacktrace_, `set`, `shopt`, `LANG` boilerplate all set up
-- Dead-simple, miniscule function API (only `die()`, `error()`, `warn()`, and `info()`)
+- Dead-simple, miniscule function API (only `die()`, `warn()`, `info()`, and `assert.nonempty`)
 - `POSIX` compliant
 - Automatically `cd`'s to directory contaning shell script
 
