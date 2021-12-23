@@ -28,6 +28,7 @@ main.bake() {
 		exit 1
 	fi
 
+	unset -v BASALT_PACKAGE_DIR
 	# shellcheck disable=SC2097,SC2098
 	BAKE_ROOT="$BAKE_ROOT" "$BAKE_ROOT/bake" "$@"
 }

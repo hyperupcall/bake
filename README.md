@@ -68,27 +68,3 @@ Use [Basalt](https://github.com/hyperupcall/basalt), a Bash package manager, to 
 ```sh
 basalt global add hyperupcall/bake
 ```
-
-## Bugs
-
-- `set -e` doesn't work properly
-
-## Reference
-
-Use these environment variables and functions _within tasks_ of your Bakefile
-
-#### `BAKE_ROOT`
-
-Environment variable with the absolute path to the directory that contains the `Bakefile.sh`
-
-#### `run()`
-
-Run a command and exit on failure
-
-#### `die()`
-
-#### `error`
-
-#### `warn()`
-
-### `info()`
