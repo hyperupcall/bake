@@ -1,20 +1,9 @@
 [package]
-name = 'bmake'
-slug = 'bmake'
+name = 'bake'
+slug = 'bake'
 version = '0.2.0'
 authors = ['Edwin Kofler <edwin@kofler.dev>']
 description = 'A Bash-based Make alternative'
 
 [run]
-dependencies = []
-sourceDirs = []
-builtinDirs = []
 binDirs = ['pkg/bin']
-completionDirs = []
-manDirs = []
-
-[run.shellEnvironment]
-
-[run.setOptions]
-
-[run.shoptOptions]
