@@ -3,12 +3,9 @@
 dobad() { echo 'doing bad'; return 2; }
 
 task.seven() {
-	if [ -e fakefile ]; then
-		echo is handled
-	fi
-	false || echo not
-	echo 'going to fail'
-	dobad
-	echo $?
-	echo 'after failure'
+	echo aaa "$@"
+
+	echo last
+	false
+	echo final
 }
