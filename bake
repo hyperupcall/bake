@@ -37,6 +37,17 @@ __bake_error() {
 	fi
 }
 
+__bake_print_tasks() {
+	# shellcheck disable=SC1007,SC2034
+	local regex="^(([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)).*" line= fn_name=
+	printf '%s\n' 'Tasks:' >&2
+	while IFS= read -r line; do
+		if [[ "$line" =~ $regex ]]; then
+			printf '%s\n' "  -> ${BASH_REMATCH[3]}" >&2
+		fi
+	done < "$BAKE_ROOT/Bakefile.sh"; unset line
+}
+
 # Public API
 die() {
 	if [ -n "$1" ]; then
@@ -90,16 +101,8 @@ main() {
 	set -- "${@:2}"
 
 	if [ -z "$task" ]; then
-		__bake_error "No task supplied"
-
-		# shellcheck disable=SC1007,SC2034
-		local regex="^(([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)).*" line= fn_name=
-		printf '%s\n' 'Tasks:' >&2
-		while IFS= read -r line; do
-			if [[ "$line" =~ $regex ]]; then
-				printf '%s\n' "  -> ${BASH_REMATCH[3]}" >&2
-			fi
-		done < "$BAKE_ROOT/Bakefile.sh"; unset line
+		__bake_error "No valid task supplied"
+		__bake_print_tasks
 
 		exit 1
 	fi
@@ -124,6 +127,7 @@ main() {
 		task."$task" "$@"
 	else
 		__bake_error "Task '$task' not found"
+		__bake_print_tasks
 		exit 1
 	fi
 }
