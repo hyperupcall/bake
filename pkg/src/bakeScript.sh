@@ -5,7 +5,6 @@ if [ "$0" != "${BASH_SOURCE[0]}" ]; then
 	return 1
 fi
 
-
 # Private API (unstable)
 __bake_trap_err() {
 	local err_code=$?
@@ -14,6 +13,13 @@ __bake_trap_err() {
 		printf "\033[0;33m%s\033[0m %s\n" "Warn (bake)" "Your 'Bakefile.sh' did not exit successfully" >&2
 	else
 		printf '%s: %s\n' 'Warn (bake)' "Your 'Bakefile.sh' did not exit successfully" >&2
+	fi
+
+	if (( ${#FUNCNAME[@]} >> 2 )); then
+		for ((i=0; i<${#FUNCNAME[@]}-1; i++)); do
+			local bash_source=${BASH_SOURCE[$i+1]}; bash_source="${bash_source##*/}"
+			printf '%s\n' "  -> $bash_source:${BASH_LINENO[$i]} ${FUNCNAME[$i]}()"
+		done
 	fi
 
 	exit $err_code
@@ -32,7 +38,6 @@ __bake_die() {
 
 	exit 1
 }
-
 
 # Public API
 die() {
@@ -75,8 +80,7 @@ run() {
 	fi
 }
 
-# Note: Don't do `command -v` with anything related to `Bakefile.sh`, since
-# `errexit` won't work
+# Note: Don't do `command -v` with anything related to `Bakefile.sh`, since `errexit` won't work
 main() {
 	set -Eeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe nullglob shift_verbose
@@ -92,7 +96,7 @@ main() {
 	fi
 
 	# shellcheck disable=SC2097,SC1007,SC2098,SC1091
-	BAKE_ROOT= task= source "$BAKE_ROOT/Bakefile.sh"
+	task= source "$BAKE_ROOT/Bakefile.sh"
 
 	if declare -f task."$task" >/dev/null 2>&1; then
 		read -r _stty_height _stty_width < <(stty size)

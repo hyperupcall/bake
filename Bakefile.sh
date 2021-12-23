@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 
-dobad() { echo 'doing bad'; return 2; }
+task.lint() {
+	prettier "**/*.{js,css}"
+	eslint '.'
+	stylelint "**/*.css"
+}
 
-task.seven() {
-	echo aaa "$@"
+task.deploy() {
+	yarn build
+	git commit -m v0.1.0 ... && git tag v0.1.0 ...
+	gh release ...
+}
 
-	echo last
+task.fail() {
+	printf '%s\n' "$1"
 	false
-	echo final
 }
