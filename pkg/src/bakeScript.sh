@@ -25,6 +25,8 @@ fi
 __bake_trap_err() {
 	local err_code=$?
 
+	__bake_print_big "<- ERROR"
+
 	if __bake_is_color; then
 		printf "\033[0;31m%s\033[0m: %s\n" "Error (bake)" "Your 'Bakefile.sh' did not exit successfully"
 	else
