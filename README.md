@@ -45,7 +45,7 @@ When there is a failure...
 ```sh
 $ bake fail 'WOOF'
 WOOF
-Warn (bake): Your 'Bakefile.sh' did not exit successfully
+Error (bake): Your 'Bakefile.sh' did not exit successfully
   -> Bakefile.sh:17 __bake_trap_err()
   -> bake:117 task.fail()
   -> bake:123 main()

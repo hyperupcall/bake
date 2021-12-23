@@ -10,9 +10,9 @@ __bake_trap_err() {
 	local err_code=$?
 
 	if __bake_is_tty; then
-		printf "\033[0;33m%s\033[0m %s\n" "Warn (bake)" "Your 'Bakefile.sh' did not exit successfully" >&2
+		printf "\033[0;31m%s\033[0m %s\n" "Error (bake)" "Your 'Bakefile.sh' did not exit successfully" >&2
 	else
-		printf '%s: %s\n' 'Warn (bake)' "Your 'Bakefile.sh' did not exit successfully" >&2
+		printf '%s: %s\n' 'Error (bake)' "Your 'Bakefile.sh' did not exit successfully" >&2
 	fi
 
 	if (( ${#FUNCNAME[@]} >> 2 )); then
