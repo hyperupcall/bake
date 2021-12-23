@@ -26,17 +26,33 @@ Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 
 ### die()
 
-Prints '$1' to the console as an error, then exits with code 1
+Prints `$1` formatted as an error to standard error, then exits with code 1
+
+#### Arguments
+
+* **$1** (string): Text to print
 
 ### error()
 
-Prints '$1' formatted as an error to standard error
+Prints `$1` formatted as an error to standard error
+
+#### Arguments
+
+* **$1** (string): Text to print
 
 ### warn()
 
-Prints '$1' formatted as a warning to standard error
+Prints `$1` formatted as a warning to standard error
+
+#### Arguments
+
+* **$1** (string): Text to print
 
 ### info()
 
-Prints '$1' formatted as information to standard output
+Prints `$1` formatted as information to standard output
+
+#### Arguments
+
+* **$1** (string): Text to print
 

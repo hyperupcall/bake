@@ -42,12 +42,15 @@ __bake_trap_err() {
 } >&2
 
 # @description Test whether color should be outputed
+# @exitcode 0 if should print color
+# @exitcode 1 if should not print color
 # @internal
 __bake_is_color() {
 	! [[ -v NO_COLOR || $TERM == dumb ]]
 }
 
-# @description Prints '$1' formatted as a Bake error to standard error
+# @description Prints `$1` formatted as a Bake error to standard error
+# @arg $1 Text to print
 # @internal
 __bake_error() {
 	if __bake_is_color; then
@@ -76,7 +79,7 @@ __bake_print_tasks() {
 __bake_print_big() {
 	local print_text="$1"
 
-	# shellcheck shell=SC1007
+	# shellcheck disable=SC1007
 	local _stty_height= _stty_width=
 	read -r _stty_height _stty_width < <(
 		if command -v stty &>/dev/null; then
@@ -97,7 +100,8 @@ __bake_print_big() {
 	fi
 }
 
-# @description Prints '$1' to the console as an error, then exits with code 1
+# @description Prints `$1` formatted as an error to standard error, then exits with code 1
+# @arg $1 string Text to print
 die() {
 	if [ -n "$1" ]; then
 		error "$1. Exiting"
@@ -108,7 +112,8 @@ die() {
 	exit 1
 }
 
-# @description Prints '$1' formatted as an error to standard error
+# @description Prints `$1` formatted as an error to standard error
+# @arg $1 string Text to print
 error() {
 	if __bake_is_color; then
 		printf "\033[0;31m%s\033[0m: %s\n" 'Error' "$1" >&2
@@ -117,7 +122,8 @@ error() {
 	fi
 }
 
-# @description Prints '$1' formatted as a warning to standard error
+# @description Prints `$1` formatted as a warning to standard error
+# @arg $1 string Text to print
 warn() {
 	if __bake_is_color; then
 		printf "\033[1;33m%s\033[0m: %s\n" 'Warn' "$1" >&2
@@ -126,7 +132,8 @@ warn() {
 	fi
 }
 
-# @description Prints '$1' formatted as information to standard output
+# @description Prints `$1` formatted as information to standard output
+# @arg $1 string Text to print
 info() {
 	if __bake_is_color; then
 		printf "\033[0;34m%s\033[0m: %s\n" 'Info' "$1"
