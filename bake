@@ -29,14 +29,12 @@ __bake_is_tty() {
 	! [[ -v NO_COLOR || $TERM == dumb ]]
 }
 
-__bake_die() {
+__bake_error() {
 	if __bake_is_tty; then
 		printf "\033[0;31m%s\033[0m %s\n" "Error (bake)" "$1" >&2
 	else
 		printf '%s: %s\n' 'Error (bake)' "$1" >&2
 	fi
-
-	exit 1
 }
 
 # Public API
@@ -92,7 +90,18 @@ main() {
 	set -- "${@:2}"
 
 	if [ -z "$task" ]; then
-		__bake_die "No task supplied"
+		__bake_error "No task supplied"
+
+		# shellcheck disable=SC1007,SC2034
+		local regex="^(([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)).*" line= fn_name=
+		printf '%s\n' 'Tasks:'
+		while IFS= read -r line; do
+			if [[ "$line" =~ $regex ]]; then
+				printf '%s\n' "  -> ${BASH_REMATCH[3]}"
+			fi
+		done < "$BAKE_ROOT/Bakefile.sh"; unset line
+
+		exit 1
 	fi
 
 	# shellcheck disable=SC2097,SC1007,SC2098,SC1091
@@ -114,7 +123,8 @@ main() {
 
 		task."$task" "$@"
 	else
-		__bake_die "Task '$task' not found"
+		__bake_error "Task '$task' not found"
+		exit 1
 	fi
 }
 
