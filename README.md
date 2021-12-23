@@ -4,7 +4,7 @@ A Bash-based Make alternative
 
 ## Why?
 
-Make is not meant to be used as a task runner. [Just](https://github.com/casey/just) and [scripts-to-rule-them-all](https://github.com/github/scripts-to-rule-them-all) help, but I wanted both a simpler and more portable solution
+Make is not meant to be used as a task runner. [Just](https://github.com/casey/just) and [scripts-to-rule-them-all](https://github.com/github/scripts-to-rule-them-all) help, but I wanted a simpler, more portable, and streamlined solution
 
 It's simple: write a `Bakefile.sh` script:
 
@@ -29,21 +29,21 @@ task.fail() {
 }
 ```
 
-You get the idea...
-
 In the same directory:
 
 ```txt
 $ bake deploy
--> RUNNING TASK 'deploy' ==============================
+-> RUNNING TASK 'deploy' =================================
 yarn run v1.22.17
 ...
+<- DONE ==================================================
 ```
 
 When there is a failure...
 
 ```txt
 $ bake fail 'WOOF'
+-> RUNNING TASK 'docs' ===================================
 WOOF
 Error (bake): Your 'Bakefile.sh' did not exit successfully
   -> Bakefile.sh:17 __bake_trap_err()
@@ -64,13 +64,15 @@ Tasks:
   -> fail
 ```
 
-_It just works_
+To sum it up, _it just works_
 
 ## Features
 
 - Generates a `./bake` file, for use in CI, etc.
 - _Stacktrace_, `set`, `shopt`, `LANG` boilerplate all set up
-- Dead-simple, miniscule function API (`die()`, `info()`, etc.)
+- Dead-simple, miniscule function API (only `die()`, `error()`, `warn()`, and `info()`)
+- `POSIX` compliant
+- Automatically `cd`'s to directory contaning shell script
 
 ## Installation
 
