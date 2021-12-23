@@ -94,10 +94,10 @@ main() {
 
 		# shellcheck disable=SC1007,SC2034
 		local regex="^(([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)).*" line= fn_name=
-		printf '%s\n' 'Tasks:'
+		printf '%s\n' 'Tasks:' >&2
 		while IFS= read -r line; do
 			if [[ "$line" =~ $regex ]]; then
-				printf '%s\n' "  -> ${BASH_REMATCH[3]}"
+				printf '%s\n' "  -> ${BASH_REMATCH[3]}" >&2
 			fi
 		done < "$BAKE_ROOT/Bakefile.sh"; unset line
 

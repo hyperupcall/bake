@@ -33,7 +33,7 @@ You get the idea...
 
 In the same directory:
 
-```sh
+```txt
 $ bake deploy
 -> RUNNING TASK 'deploy' ==============================
 yarn run v1.22.17
@@ -42,7 +42,7 @@ yarn run v1.22.17
 
 When there is a failure...
 
-```sh
+```txt
 $ bake fail 'WOOF'
 WOOF
 Error (bake): Your 'Bakefile.sh' did not exit successfully
@@ -51,6 +51,17 @@ Error (bake): Your 'Bakefile.sh' did not exit successfully
   -> bake:123 main()
 $ echo $?
 1
+```
+
+If you don't remember the tasks...
+
+```txt
+$ bake
+Error (bake) No task supplied
+Tasks:
+  -> lint
+  -> deploy
+  -> fail
 ```
 
 _It just works_
