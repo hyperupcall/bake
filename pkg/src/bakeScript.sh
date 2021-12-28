@@ -167,7 +167,7 @@ main() {
 		LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
 
-	task=$1
+	local task=$1
 	set -- "${@:2}"
 
 	if [ -z "$task" ]; then
