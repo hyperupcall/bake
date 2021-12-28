@@ -45,6 +45,7 @@ When there is a failure...
 $ bake fail 'WOOF'
 -> RUNNING TASK 'docs' ===================================
 WOOF
+<- ERROR =================================================
 Error (bake): Your 'Bakefile.sh' did not exit successfully
   -> Bakefile.sh:17 __bake_trap_err()
   -> bake:117 task.fail()
