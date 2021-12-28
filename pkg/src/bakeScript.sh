@@ -20,7 +20,7 @@ if [ "$0" != "${BASH_SOURCE[0]}" ]; then
 	return 1
 fi
 
-# @description Function 'trap' calles on 'ERR'
+# @description Function 'trap' calls on 'ERR'
 # @internal
 __bake_trap_err() {
 	local err_code=$?
