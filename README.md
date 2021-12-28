@@ -29,7 +29,7 @@ task.fail() {
 }
 ```
 
-In the same directory:
+In the same (or any child) directory:
 
 ```txt
 $ bake deploy
