@@ -27,6 +27,10 @@ task.fail() {
 	printf '%s\n' "$1"
 	false
 }
+
+task.succeed() {
+	printf '%s\n' 'Success!'
+}
 ```
 
 In the same (or any child) directory:
@@ -47,11 +51,20 @@ $ bake fail 'WOOF'
 WOOF
 <- ERROR =================================================
 Error (bake): Your 'Bakefile.sh' did not exit successfully
-  -> Bakefile.sh:17 __bake_trap_err()
-  -> bake:117 task.fail()
-  -> bake:123 main()
+Stacktrace:
+  -> bake:52 __bake_print_stacktrace()
+  -> bake:17 __bake_trap_err()
+  -> Bakefile.sh:235 task.fail()
+  -> bake:244 main()
 $ echo $?
 1
+```
+
+Prettified outputed is sent to standard error, so pipines works
+
+```txt
+$ bake succeed 2>/dev/null | cat
+Success!
 ```
 
 If you don't remember the tasks...

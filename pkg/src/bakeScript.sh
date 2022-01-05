@@ -24,9 +24,9 @@ fi
 # @internal
 __bake_print_stacktrace() {
 	if __bake_is_color; then
-		printf '\033[4m%s\033[0m\n' 'Stacktrace'
+		printf '\033[4m%s\033[0m%s\n' 'Stacktrace' ':'
 	else
-		printf '%s\n' 'Stacktrace'
+		printf '%s\n' 'Stacktrace:'
 	fi
 
 	local i=
