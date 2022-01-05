@@ -20,6 +20,22 @@ if [ "$0" != "${BASH_SOURCE[0]}" ]; then
 	return 1
 fi
 
+# @description Print stacktrace
+# @internal
+__bake_print_stacktrace() {
+	if __bake_is_color; then
+		printf '\033[4m%s\033[0m\n' 'Stacktrace'
+	else
+		printf '%s\n' 'Stacktrace'
+	fi
+
+	local i=
+	for ((i=0; i<${#FUNCNAME[@]}-1; i++)); do
+		local bash_source=${BASH_SOURCE[$i]}; bash_source="${bash_source##*/}"
+		printf '%s\n' "  -> $bash_source:${BASH_LINENO[$i]} ${FUNCNAME[$i]}()"
+	done; unset i
+} >&2
+
 # @description Function 'trap' calles on 'ERR'
 # @internal
 __bake_trap_err() {
@@ -33,12 +49,7 @@ __bake_trap_err() {
 		printf '%s: %s\n' 'Error (bake)' "Your 'Bakefile.sh' did not exit successfully"
 	fi
 
-	if (( ${#FUNCNAME[@]} >> 2 )); then
-		for ((i=0; i<${#FUNCNAME[@]}-1; i++)); do
-			local bash_source=${BASH_SOURCE[$i+1]}; bash_source="${bash_source##*/}"
-			printf '%s\n' "  -> $bash_source:${BASH_LINENO[$i]} ${FUNCNAME[$i]}()"
-		done
-	fi
+	__bake_print_stacktrace
 
 	exit $err_code
 } >&2
@@ -56,35 +67,36 @@ __bake_is_color() {
 # @internal
 __bake_internal_error() {
 	if __bake_is_color; then
-		printf "\033[0;31m%s\033[0m: %s\n" "Error (bake)" "$1" >&2
+		printf "\033[0;31m%s\033[0m: %s\n" "Error (bake)" "$1"
 	else
-		printf '%s: %s\n' 'Error (bake)' "$1" >&2
+		printf '%s: %s\n' 'Error (bake)' "$1"
 	fi
-}
+} >&2
 
 # @description Prints `$1` formatted as an error to standard error
 # @arg $1 string Text to print
 # @internal
 __bake_error() {
 	if __bake_is_color; then
-		printf "\033[0;31m%s\033[0m: %s\n" 'Error' "$1" >&2
+		printf "\033[0;31m%s\033[0m: %s\n" 'Error' "$1"
 	else
-		printf '%s: %s\n' 'Error' "$1" >&2
+		printf '%s: %s\n' 'Error' "$1"
 	fi
-}
+} >&2
 
 # @description Nicely prints all 'Basalt.sh' tasks to standard output
 # @internal
 __bake_print_tasks() {
 	# shellcheck disable=SC1007,SC2034
-	local regex="^(([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)).*" line= fn_name=
+	local regex="^(([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)).*"
+	local line=
 	printf '%s\n' 'Tasks:'
 	while IFS= read -r line; do
 		if [[ "$line" =~ $regex ]]; then
 			printf '%s\n' "  -> ${BASH_REMATCH[3]}"
 		fi
 	done < "$BAKE_ROOT/Bakefile.sh"; unset line
-}
+} >&2
 
 # @description Prints text that takes up the whole terminal width
 # @arg $1 string Text to print
@@ -111,18 +123,20 @@ __bake_print_big() {
 	else
 		printf '%s %s\n' "$print_text" "$separator_text"
 	fi
-}
+} >&2
 
 # @description Prints `$1` formatted as an error to standard error, then exits with code 1
 # @arg $1 string Text to print
 die() {
-	__bake_print_big "<- ERROR"
-
 	if [ -n "$1" ]; then
 		__bake_error "$1. Exiting"
 	else
 		__bake_error 'Exiting'
 	fi
+	__bake_print_big "<- ERROR"
+
+	__bake_print_stacktrace
+
 	exit 1
 }
 
@@ -130,11 +144,11 @@ die() {
 # @arg $1 string Text to print
 warn() {
 	if __bake_is_color; then
-		printf "\033[1;33m%s\033[0m: %s\n" 'Warn' "$1" >&2
+		printf "\033[1;33m%s\033[0m: %s\n" 'Warn' "$1"
 	else
-		printf '%s: %s\n' 'Warn' "$1" >&2
+		printf '%s: %s\n' 'Warn' "$1"
 	fi
-}
+} >&2
 
 # @description Prints `$1` formatted as information to standard output
 # @arg $1 string Text to print
@@ -154,13 +168,45 @@ assert.nonempty() {
 		local -n variable="$variable_name"
 
 		if [ -z "$variable" ]; then
-			die "Variable '$variable_name' is empty"
+			die "Failed because variable '$variable_name' is empty"
 		fi
-	done
+	done; unset variable_name
+}
+
+# @description Dies if a command cannot be found
+# @arg $1 string Command to test for existence
+assert.cmd() {
+	local cmd=$1
+
+	if [ -z "$cmd" ]; then
+		die "Argument must not be empty"
+	fi
+
+	if ! command -v "$cmd" &>/dev/null; then
+		die "Failed to find command '$cmd'. Please install it before continuing"
+	fi
 }
 
 # Note: Don't do `command -v` with anything related to `Bakefile.sh`, since `errexit` won't work
 main() {
+	if ! BAKE_ROOT="$(
+		while [ ! -f 'Bakefile.sh' ] && [ "$PWD" != / ]; do
+			if ! cd ..; then
+				printf '%s\n' "Error: Could not cd .." >&2
+				exit 1
+			fi
+		done
+
+		if [ "$PWD" = / ]; then
+			printf '%s\n' "Error: Could not find 'Bakefile.sh'" >&2
+			exit 1
+		fi
+
+		printf '%s' "$PWD"
+	)"; then
+		exit 1
+	fi
+
 	set -Eeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe nullglob shift_verbose
 	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' LC_MONETARY='C' LC_MESSAGES='C' \
@@ -172,7 +218,7 @@ main() {
 
 	if [ -z "$task" ]; then
 		__bake_internal_error "No valid task supplied"
-		__bake_print_tasks >&2
+		__bake_print_tasks
 		exit 1
 	fi
 
@@ -190,7 +236,7 @@ main() {
 		__bake_print_big "<- DONE"
 	else
 		__bake_internal_error "Task '$task' not found"
-		__bake_print_tasks >&2
+		__bake_print_tasks
 		exit 1
 	fi
 }

@@ -23,6 +23,7 @@ Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 * [warn()](#warn)
 * [info()](#info)
 * [assert.nonempty()](#assertnonempty)
+* [assert.cmd()](#assertcmd)
 
 ### die()
 
@@ -55,4 +56,12 @@ Dies if any of the supplied variables are empty
 #### Arguments
 
 * **...** (string): Variable names to print
+
+### assert.cmd()
+
+Dies if a command cannot be found
+
+#### Arguments
+
+* **$1** (string): Command to test for existence
 
