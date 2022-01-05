@@ -1,7 +1,7 @@
 [package]
 name = 'bake'
 slug = 'bake'
-version = '0.2.1'
+version = '1.0.0'
 authors = ['Edwin Kofler <edwin@kofler.dev>']
 description = 'A Bash-based Make alternative'
 
