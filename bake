@@ -127,7 +127,7 @@ __bake_print_big() {
 
 # @description Prints `$1` formatted as an error to standard error, then exits with code 1
 # @arg $1 string Text to print
-die() {
+bake.die() {
 	if [ -n "$1" ]; then
 		__bake_error "$1. Exiting"
 	else
@@ -142,7 +142,7 @@ die() {
 
 # @description Prints `$1` formatted as a warning to standard error
 # @arg $1 string Text to print
-warn() {
+bake.warn() {
 	if __bake_is_color; then
 		printf "\033[1;33m%s\033[0m: %s\n" 'Warn' "$1"
 	else
@@ -152,7 +152,7 @@ warn() {
 
 # @description Prints `$1` formatted as information to standard output
 # @arg $1 string Text to print
-info() {
+bake.info() {
 	if __bake_is_color; then
 		printf "\033[0;34m%s\033[0m: %s\n" 'Info' "$1"
 	else
@@ -162,28 +162,28 @@ info() {
 
 # @description Dies if any of the supplied variables are empty
 # @arg $@ string Variable names to print
-assert.nonempty() {
+bake.assert_nonempty() {
 	local variable_name=
 	for variable_name; do
 		local -n variable="$variable_name"
 
 		if [ -z "$variable" ]; then
-			die "Failed because variable '$variable_name' is empty"
+			bake.die "Failed because variable '$variable_name' is empty"
 		fi
 	done; unset variable_name
 }
 
 # @description Dies if a command cannot be found
 # @arg $1 string Command to test for existence
-assert.cmd() {
+bake.assert_cmd() {
 	local cmd=$1
 
 	if [ -z "$cmd" ]; then
-		die "Argument must not be empty"
+		bake.die "Argument must not be empty"
 	fi
 
 	if ! command -v "$cmd" &>/dev/null; then
-		die "Failed to find command '$cmd'. Please install it before continuing"
+		bake.die "Failed to find command '$cmd'. Please install it before continuing"
 	fi
 }
 

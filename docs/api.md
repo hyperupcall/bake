@@ -19,13 +19,13 @@ Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 
 ## Index
 
-* [die()](#die)
-* [warn()](#warn)
-* [info()](#info)
-* [assert.nonempty()](#assertnonempty)
-* [assert.cmd()](#assertcmd)
+* [bake.die()](#bakedie)
+* [bake.warn()](#bakewarn)
+* [bake.info()](#bakeinfo)
+* [bake.assert_nonempty()](#bakeassert_nonempty)
+* [bake.assert_cmd()](#bakeassert_cmd)
 
-### die()
+### bake.die()
 
 Prints `$1` formatted as an error to standard error, then exits with code 1
 
@@ -33,7 +33,7 @@ Prints `$1` formatted as an error to standard error, then exits with code 1
 
 * **$1** (string): Text to print
 
-### warn()
+### bake.warn()
 
 Prints `$1` formatted as a warning to standard error
 
@@ -41,7 +41,7 @@ Prints `$1` formatted as a warning to standard error
 
 * **$1** (string): Text to print
 
-### info()
+### bake.info()
 
 Prints `$1` formatted as information to standard output
 
@@ -49,7 +49,7 @@ Prints `$1` formatted as information to standard output
 
 * **$1** (string): Text to print
 
-### assert.nonempty()
+### bake.assert_nonempty()
 
 Dies if any of the supplied variables are empty
 
@@ -57,7 +57,7 @@ Dies if any of the supplied variables are empty
 
 * **...** (string): Variable names to print
 
-### assert.cmd()
+### bake.assert_cmd()
 
 Dies if a command cannot be found
 
