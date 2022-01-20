@@ -52,10 +52,8 @@ WOOF
 <- ERROR =================================================
 Error (bake): Your 'Bakefile.sh' did not exit successfully
 Stacktrace:
-  -> bake:52 __bake_print_stacktrace()
-  -> bake:17 __bake_trap_err()
   -> Bakefile.sh:235 task.fail()
-  -> bake:244 main()
+  -> bake:244 __bake_main()
 $ echo $?
 1
 ```

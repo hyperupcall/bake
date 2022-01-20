@@ -30,7 +30,7 @@ __bake_print_stacktrace() {
 	fi
 
 	local i=
-	for ((i=0; i<${#FUNCNAME[@]}-1; i++)); do
+	for ((i=2; i<${#FUNCNAME[@]}-1; i++)); do
 		local bash_source=${BASH_SOURCE[$i]}; bash_source="${bash_source##*/}"
 		printf '%s\n' "  -> $bash_source:${BASH_LINENO[$i]} ${FUNCNAME[$i]}()"
 	done; unset -v i
