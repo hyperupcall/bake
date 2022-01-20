@@ -1,16 +1,16 @@
 # shellcheck shell=bash
 
 main.bake() {
-	if ! BAKE_ROOT="$(
+	if ! bake_root="$(
 		while [ ! -f 'Bakefile.sh' ] && [ "$PWD" != / ]; do
 			if ! cd ..; then
-				printf '%s\n' "Error: Could not cd .." >&2
+				printf '%s\n' "Error (bake): Could not cd .." >&2
 				exit 1
 			fi
 		done
 
 		if [ "$PWD" = / ]; then
-			printf '%s\n' "Error: Could not find 'Bakefile.sh'" >&2
+			printf '%s\n' "Error (bake): Could not find 'Bakefile.sh'" >&2
 			exit 1
 		fi
 
@@ -19,16 +19,17 @@ main.bake() {
 		exit 1
 	fi
 
-	if ! cp -f "$BASALT_PACKAGE_DIR/pkg/src/bakeScript.sh" "$BAKE_ROOT/bake"; then
-		printf '%s\n' "Error: Could not copy 'bakeScript.sh'" >&2
+	if ! cp -f "$BASALT_PACKAGE_DIR/pkg/src/bakeScript.sh" "$bake_root/bake"; then
+		printf '%s\n' "Error (bake): Could not copy 'bakeScript.sh'" >&2
 		exit 1
 	fi
-	if ! chmod +x "$BAKE_ROOT/bake"; then
-		printf '%s\n' "Error: could not 'chmod +x' bake script" >&2
+	if ! chmod +x "$bake_root/bake"; then
+		printf '%s\n' "Error (bake): could not 'chmod +x' bake script" >&2
 		exit 1
 	fi
 
-	unset -v BASALT_PACKAGE_DIR
+	unset -v BASALT_PACKAGE_DIR # Unset so hidden for `Bakefile.sh` scripts
+
 	# shellcheck disable=SC2097,SC2098
-	BAKE_ROOT="$BAKE_ROOT" "$BAKE_ROOT/bake" "$@"
+	exec "$bake_root/bake" "$@"
 }

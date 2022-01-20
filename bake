@@ -33,7 +33,7 @@ __bake_print_stacktrace() {
 	for ((i=0; i<${#FUNCNAME[@]}-1; i++)); do
 		local bash_source=${BASH_SOURCE[$i]}; bash_source="${bash_source##*/}"
 		printf '%s\n' "  -> $bash_source:${BASH_LINENO[$i]} ${FUNCNAME[$i]}()"
-	done; unset i
+	done; unset -v i
 } >&2
 
 # @description Function 'trap' calls on 'ERR'
@@ -91,11 +91,11 @@ __bake_print_tasks() {
 	local regex="^(([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)).*"
 	local line=
 	printf '%s\n' 'Tasks:'
-	while IFS= read -r line; do
+	while IFS= read -r line || [ -n "$line" ]; do
 		if [[ "$line" =~ $regex ]]; then
 			printf '%s\n' "  -> ${BASH_REMATCH[3]}"
 		fi
-	done < "$BAKE_ROOT/Bakefile.sh"; unset line
+	done < "$BAKE_ROOT/Bakefile.sh"; unset -v line
 } >&2
 
 # @description Prints text that takes up the whole terminal width
@@ -170,7 +170,7 @@ bake.assert_nonempty() {
 		if [ -z "$variable" ]; then
 			bake.die "Failed because variable '$variable_name' is empty"
 		fi
-	done; unset variable_name
+	done; unset -v variable_name
 }
 
 # @description Dies if a command cannot be found
@@ -187,8 +187,7 @@ bake.assert_cmd() {
 	fi
 }
 
-# Note: Don't do `command -v` with anything related to `Bakefile.sh`, since `errexit` won't work
-main() {
+__bake_main() {
 	if ! BAKE_ROOT="$(
 		while [ ! -f 'Bakefile.sh' ] && [ "$PWD" != / ]; do
 			if ! cd ..; then
@@ -223,7 +222,7 @@ main() {
 	fi
 
 	if ! cd "$BAKE_ROOT"; then
-		__bake_internal_error "cd failed"
+		__bake_internal_error "Failed to cd"
 		exit 1
 	fi
 
@@ -241,4 +240,4 @@ main() {
 	fi
 }
 
-main "$@"
+__bake_main "$@"
