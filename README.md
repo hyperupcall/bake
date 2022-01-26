@@ -85,6 +85,8 @@ To sum it up, _it just works_
 - Dead-simple, miniscule function API (see [api.md](./docs/api.md) for details)
 - `POSIX` compliant
 - Automatically `cd`'s to directory contaning shell script
+- Pass `-f` to manually specify Bakefile
+- Use `init()` function to specify always-running scripts
 
 ## Installation
 
