@@ -27,7 +27,8 @@ Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 
 ### bake.die()
 
-Prints `$1` formatted as an error to standard error, then exits with code 1
+Prints `$1` formatted as an error and the stacktrace to standard error,
+then exits with code 1
 
 #### Arguments
 

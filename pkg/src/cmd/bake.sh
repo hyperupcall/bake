@@ -1,9 +1,6 @@
 # shellcheck shell=bash
 
 main.bake() {
-	set -eo pipefail
-	shopt -s shift_verbose
-
 	local bake_script="$BASALT_PACKAGE_DIR/pkg/src/bakeScript.sh"
 
 	# shellcheck disable=SC1090

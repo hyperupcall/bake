@@ -271,6 +271,9 @@ __bake_main() {
 
 	if declare -f task."$task" >/dev/null 2>&1; then
 		__bake_print_big "-> RUNNING TASK '$task'"
+		if declare -f init >/dev/null 2>&1; then
+			init "$task"
+		fi
 		task."$task" "$@"
 		__bake_print_big "<- DONE"
 	else
