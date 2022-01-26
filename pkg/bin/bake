@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-eval "$(basalt-package-init)"
-basalt.package-init
+eval "$(basalt-package-init)"; basalt.package-init
 basalt.package-load
 
 source "$BASALT_PACKAGE_DIR/pkg/src/cmd/bake.sh"

@@ -15,16 +15,16 @@
 #
 # Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 
-if [ "$0" != "${BASH_SOURCE[0]}" ]; then
+if [ "$0" != "${BASH_SOURCE[0]}" ] && [ "$BAKE_INTERNAL_CAN_SOURCE" != 'yes' ]; then
 	printf '%s\n' "Error: This file should not be sourced" >&2
 	return 1
 fi
 
-# @description Print stacktrace
+# @description Prints stacktrace
 # @internal
 __bake_print_stacktrace() {
 	if __bake_is_color; then
-		printf '\033[4m%s\033[0m%s\n' 'Stacktrace' ':'
+		printf '\033[4m%s\033[0m\n' 'Stacktrace:'
 	else
 		printf '%s\n' 'Stacktrace:'
 	fi
@@ -39,19 +39,13 @@ __bake_print_stacktrace() {
 # @description Function 'trap' calls on 'ERR'
 # @internal
 __bake_trap_err() {
-	local err_code=$?
+	local error_code=$?
 
 	__bake_print_big "<- ERROR"
-
-	if __bake_is_color; then
-		printf "\033[0;31m%s\033[0m: %s\n" "Error (bake)" "Your 'Bakefile.sh' did not exit successfully"
-	else
-		printf '%s: %s\n' 'Error (bake)' "Your 'Bakefile.sh' did not exit successfully"
-	fi
-
+	__bake_internal_error "Your 'Bakefile.sh' did not exit successfully"
 	__bake_print_stacktrace
 
-	exit $err_code
+	exit $error_code
 } >&2
 
 # @description Test whether color should be outputed
@@ -62,23 +56,31 @@ __bake_is_color() {
 	! [[ -v NO_COLOR || $TERM == dumb ]]
 }
 
-# @description Prints `$1` formatted as a Bake error to standard error
+# @description Prints `$1` formatted as an internal Bake error to standard error
 # @arg $1 Text to print
 # @internal
 __bake_internal_error() {
 	if __bake_is_color; then
-		printf "\033[0;31m%s\033[0m: %s\n" "Error (bake)" "$1"
+		printf "\033[0;31m%s:\033[0m %s\n" "Error (bake)" "$1"
 	else
 		printf '%s: %s\n' 'Error (bake)' "$1"
 	fi
 } >&2
+
+# @description Calls `__bake_internal_error` and terminates with code 1
+# @arg $1 string Text to print
+# @internal
+__bake_internal_die() {
+	__bake_internal_error "$1. Exiting"
+	exit 1
+}
 
 # @description Prints `$1` formatted as an error to standard error
 # @arg $1 string Text to print
 # @internal
 __bake_error() {
 	if __bake_is_color; then
-		printf "\033[0;31m%s\033[0m: %s\n" 'Error' "$1"
+		printf "\033[0;31m%s:\033[0m %s\n" 'Error' "$1"
 	else
 		printf '%s: %s\n' 'Error' "$1"
 	fi
@@ -95,7 +97,7 @@ __bake_print_tasks() {
 		if [[ "$line" =~ $regex ]]; then
 			printf '%s\n' "  -> ${BASH_REMATCH[3]}"
 		fi
-	done < "$BAKE_ROOT/Bakefile.sh"; unset -v line
+	done < "$BAKE_FILE"; unset -v line
 } >&2
 
 # @description Prints text that takes up the whole terminal width
@@ -125,7 +127,56 @@ __bake_print_big() {
 	fi
 } >&2
 
-# @description Prints `$1` formatted as an error to standard error, then exits with code 1
+__bake_set_vars() {
+	unset REPLY; REPLY=
+	local -i total_shifts=0
+
+	if [ "$1" = '-f' ]; then
+		BAKE_FILE=$2
+		if [ -z "$BAKE_FILE" ]; then
+			__bake_internal_die 'File must not be empty. Exiting'
+		fi
+		total_shifts=$((total_shifts + 2))
+
+		if [ ! -e "$BAKE_FILE" ]; then
+			__bake_internal_die "Specified file '$BAKE_FILE' does not exist"
+		fi
+		if [ ! -f "$BAKE_FILE" ]; then
+			__bake_internal_die "Specified path '$BAKE_FILE' is not actually a file"
+		fi
+	fi
+
+	if [ -n "$BAKE_FILE" ]; then
+		BAKE_ROOT=$(
+			# shellcheck disable=SC1007
+			CDPATH= cd -- "${BAKE_FILE%/*}"
+			printf '%s\n' "$PWD"
+		)
+		BAKE_FILE="$BAKE_ROOT/${BAKE_FILE##*/}"
+	else
+		if ! BAKE_ROOT=$(
+			while [ ! -f 'Bakefile.sh' ] && [ "$PWD" != / ]; do
+				if ! cd ..; then
+					exit 1
+				fi
+			done
+
+			if [ "$PWD" = / ]; then
+				exit 1
+			fi
+
+			printf '%s' "$PWD"
+		); then
+			__bake_internal_die "Could not find 'Bakefile.sh'"
+		fi
+		BAKE_FILE="$BAKE_ROOT/Bakefile.sh"
+	fi
+
+	REPLY=$total_shifts
+}
+
+# @description Prints `$1` formatted as an error and the stacktrace to standard error,
+# then exits with code 1
 # @arg $1 string Text to print
 bake.die() {
 	if [ -n "$1" ]; then
@@ -133,7 +184,7 @@ bake.die() {
 	else
 		__bake_error 'Exiting'
 	fi
-	__bake_print_big "<- ERROR"
+	__bake_print_big '<- ERROR'
 
 	__bake_print_stacktrace
 
@@ -144,7 +195,7 @@ bake.die() {
 # @arg $1 string Text to print
 bake.warn() {
 	if __bake_is_color; then
-		printf "\033[1;33m%s\033[0m: %s\n" 'Warn' "$1"
+		printf "\033[1;33m%s:\033[0m %s\n" 'Warn' "$1"
 	else
 		printf '%s: %s\n' 'Warn' "$1"
 	fi
@@ -154,7 +205,7 @@ bake.warn() {
 # @arg $1 string Text to print
 bake.info() {
 	if __bake_is_color; then
-		printf "\033[0;34m%s\033[0m: %s\n" 'Info' "$1"
+		printf "\033[0;34m%s:\033[0m %s\n" 'Info' "$1"
 	else
 		printf '%s: %s\n' 'Info' "$1"
 	fi
@@ -188,46 +239,35 @@ bake.assert_cmd() {
 }
 
 __bake_main() {
-	if ! BAKE_ROOT="$(
-		while [ ! -f 'Bakefile.sh' ] && [ "$PWD" != / ]; do
-			if ! cd ..; then
-				printf '%s\n' "Error: Could not cd .." >&2
-				exit 1
-			fi
-		done
-
-		if [ "$PWD" = / ]; then
-			printf '%s\n' "Error: Could not find 'Bakefile.sh'" >&2
-			exit 1
-		fi
-
-		printf '%s' "$PWD"
-	)"; then
-		exit 1
-	fi
-
 	set -Eeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe nullglob shift_verbose
 	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' LC_MONETARY='C' LC_MESSAGES='C' \
 		LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
 
-	local task=$1
-	set -- "${@:2}"
+	# Set `BAKE_{ROOT,FILE}`
+	BAKE_ROOT=; BAKE_FILE=
+	__bake_set_vars "$@"
+	if ! shift "$REPLY"; then
+		__bake_internal_die 'Failed to shift'
+	fi
 
+	local task=$1
 	if [ -z "$task" ]; then
 		__bake_internal_error "No valid task supplied"
 		__bake_print_tasks
 		exit 1
 	fi
-
-	if ! cd "$BAKE_ROOT"; then
-		__bake_internal_error "Failed to cd"
-		exit 1
+	if ! shift; then
+		__bake_internal_die 'Failed to shift'
 	fi
 
-	# shellcheck disable=SC2097,SC1007,SC2098,SC1091
-	task= source "$BAKE_ROOT/Bakefile.sh"
+	if ! cd "$BAKE_ROOT"; then
+		__bake_internal_die "Failed to cd"
+	fi
+
+	# shellcheck disable=SC2097,SC1007,SC1090
+	task= source "$BAKE_FILE"
 
 	if declare -f task."$task" >/dev/null 2>&1; then
 		__bake_print_big "-> RUNNING TASK '$task'"
@@ -239,5 +279,3 @@ __bake_main() {
 		exit 1
 	fi
 }
-
-__bake_main "$@"

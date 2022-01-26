@@ -188,29 +188,64 @@ bake.assert_cmd() {
 }
 
 __bake_main() {
-	if ! BAKE_ROOT="$(
-		while [ ! -f 'Bakefile.sh' ] && [ "$PWD" != / ]; do
-			if ! cd ..; then
-				printf '%s\n' "Error: Could not cd .." >&2
-				exit 1
-			fi
-		done
-
-		if [ "$PWD" = / ]; then
-			printf '%s\n' "Error: Could not find 'Bakefile.sh'" >&2
-			exit 1
-		fi
-
-		printf '%s' "$PWD"
-	)"; then
-		exit 1
-	fi
-
 	set -Eeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe nullglob shift_verbose
 	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' LC_MONETARY='C' LC_MESSAGES='C' \
 		LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
+
+	# A Bakefile may be specified with '-f'
+	local bakefile_path=
+	if [ "$1" = '-f' ]; then
+		bakefile_path=$2
+		if [ -z "$bakefile_path" ]; then
+			__bake_error 'File must not be empty. Exiting'
+			exit 1
+		fi
+		if ! shift 2; then
+			__bake_error 'Failed shift. Exiting'
+			exit 1
+		fi
+		if [ ! -e "$bakefile_path" ]; then
+			__bake_error "Specified file '$bakefile_path' does not exist"
+			exit 1
+		fi
+		if [ ! -f "$bakefile_path" ]; then
+			__bake_error "Specified path '$bakefile_path' is not actually a file"
+			exit 1
+		fi
+	fi
+	echo j
+	echo $bakefile_path
+
+	if [ -n "$bakefile_path" ]; then
+		BAKE_ROOT=$(
+			# shellcheck disable=SC1007
+			CDPATH= cd -- "${bakefile_path%/*}"
+			printf '%s\n' "$PWD"
+		)
+	else
+		if ! BAKE_ROOT=$(
+			while [ ! -f 'Bakefile.sh' ] && [ "$PWD" != / ]; do
+				if ! cd ..; then
+					printf '%s\n' "Error: Could not cd .." >&2
+					exit 1
+				fi
+			done
+
+			if [ "$PWD" = / ]; then
+				printf '%s\n' "Error: Could not find 'Bakefile.sh'" >&2
+				exit 1
+			fi
+
+			printf '%s' "$PWD"
+		); then
+			exit 1
+		fi
+		bakefile_path="$BAKE_ROOT/Bakefile.sh"
+	fi
+
+
 
 	local task=$1
 	set -- "${@:2}"
@@ -226,8 +261,12 @@ __bake_main() {
 		exit 1
 	fi
 
-	# shellcheck disable=SC2097,SC1007,SC2098,SC1091
-	task= source "$BAKE_ROOT/Bakefile.sh"
+	if [ -n "$custom_file" ]; then
+		# shellcheck disable=SC2097,SC1007,SC2098,SC1091
+		task= source "$BAKE_ROOT/Bakefile.sh"
+	else
+		task= source "$BAKE_ROOT/Bakefile.sh"
+	fi
 
 	if declare -f task."$task" >/dev/null 2>&1; then
 		__bake_print_big "-> RUNNING TASK '$task'"
