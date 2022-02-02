@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-eval "$(basalt-package-init)"; basalt.package-init
-basalt.package-load
+eval "$(basalt-package-init)"
+basalt.package-init || exit
+basalt.package-load || exit
 
 source "$BASALT_PACKAGE_DIR/pkg/src/cmd/bake.sh"
 main.bake "$@"
