@@ -87,6 +87,7 @@ To sum it up, _it just works_
 - Automatically `cd`'s to directory contaning shell script
 - Pass `-f` to manually specify Bakefile
 - Use `init()` function to specify always-running scripts
+- Set à la make like `bake key1=value1 key2=value2 docs`
 
 ## Installation
 

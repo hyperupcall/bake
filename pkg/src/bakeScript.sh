@@ -252,8 +252,27 @@ __bake_main() {
 		__bake_internal_die 'Failed to shift'
 	fi
 
-	local task=$1
-	if [ -z "$task" ]; then
+	local __bake_key= __bake_value=
+	local __bake_arg=
+	for __bake_arg; do case $__bake_arg in
+		*=*)
+			IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
+
+			declare -g "$__bake_key"
+			local -n __bake_variable="$__bake_key"
+			__bake_variable="$__bake_value"
+
+			if ! shift; then
+				__bake_internal_die 'Failed to shift'
+			fi
+			;;
+		*) break
+	esac done; unset -v __bake_arg
+	# Note: Don't unset '__bake_variable' or none of the variables will stay set
+	unset -v __bake_key __bake_value
+
+	local __bake_task="$1"
+	if [ -z "$__bake_task" ]; then
 		__bake_internal_error "No valid task supplied"
 		__bake_print_tasks
 		exit 1
@@ -267,17 +286,17 @@ __bake_main() {
 	fi
 
 	# shellcheck disable=SC2097,SC1007,SC1090
-	task= source "$BAKE_FILE"
+	__bake_task= source "$BAKE_FILE"
 
-	if declare -f task."$task" >/dev/null 2>&1; then
-		__bake_print_big "-> RUNNING TASK '$task'"
+	if declare -f task."$__bake_task" >/dev/null 2>&1; then
+		__bake_print_big "-> RUNNING TASK '$__bake_task'"
 		if declare -f init >/dev/null 2>&1; then
-			init "$task"
+			init "$__bake_task"
 		fi
-		task."$task" "$@"
+		task."$__bake_task" "$@"
 		__bake_print_big "<- DONE"
 	else
-		__bake_internal_error "Task '$task' not found"
+		__bake_internal_error "Task '$__bake_task' not found"
 		__bake_print_tasks
 		exit 1
 	fi
