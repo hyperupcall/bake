@@ -23,17 +23,19 @@ fi
 # @description Prints stacktrace
 # @internal
 __bake_print_stacktrace() {
-	if __bake_is_color; then
-		printf '\033[4m%s\033[0m\n' 'Stacktrace:'
-	else
-		printf '%s\n' 'Stacktrace:'
-	fi
+	if [ "$__bake_cfg_stacktrace" = 'yes' ]; then
+		if __bake_is_color; then
+			printf '\033[4m%s\033[0m\n' 'Stacktrace:'
+		else
+			printf '%s\n' 'Stacktrace:'
+		fi
 
-	local i=
-	for ((i=2; i<${#FUNCNAME[@]}-1; i++)); do
-		local bash_source=${BASH_SOURCE[$i]}; bash_source="${bash_source##*/}"
-		printf '%s\n' "  -> $bash_source:${BASH_LINENO[$i]} ${FUNCNAME[$i]}()"
-	done; unset -v i
+		local i=
+		for ((i=0;i<${#FUNCNAME[@]}-1;i++)); do
+			local __bash_source=${BASH_SOURCE[$i]}; __bash_source="${__bash_source##*/}"
+			printf '%s\n' "  in ${FUNCNAME[$i]} ($__bash_source:${BASH_LINENO[$i-1]})"
+		done; unset -v i __bash_source
+	fi
 } >&2
 
 # @description Function 'trap' calls on 'ERR'
@@ -238,7 +240,22 @@ bake.assert_cmd() {
 	fi
 }
 
+# @description Edit configuration that affects the behavior of Bake
+# @arg $1 string Configuration option to change
+# @arg $2 string Value of configuration property
+bake.cfg() {
+	local cfg=$1
+	local value=$2
+
+	case $cfg in
+		stacktrace)
+			__bake_cfg_stacktrace=$2
+	esac
+}
+
 __bake_main() {
+	__bake_cfg_stacktrace='yes'
+
 	set -Eeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
 	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' LC_MONETARY='C' LC_MESSAGES='C' \

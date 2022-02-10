@@ -88,6 +88,7 @@ To sum it up, _it just works_
 - Pass `-f` to manually specify Bakefile
 - Use `init()` function to specify always-running scripts
 - Set à la make like `bake key1=value1 key2=value2 docs`
+- `bake.cfg` to modify options. Currently `bake.cfg stacktrace yes` works
 
 ## Installation
 
