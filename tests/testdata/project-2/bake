@@ -187,7 +187,7 @@ __bake_set_vars() {
 
 	if [ "$flag_help" = 'yes' ]; then
 		cat <<-EOF
-		Usage: bake [-h] [-f <Bakefile>] [var=value ...] <task> [args ...]
+		Usage: bake [-h] [-f <Bakefile>] [var1=key1 ...] <task> [args ...]
 		EOF
 		__bake_print_tasks
 		exit
@@ -337,3 +337,5 @@ __bake_main() {
 		exit 1
 	fi
 }
+
+__bake_main "$@"

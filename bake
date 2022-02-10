@@ -133,12 +133,17 @@ __bake_set_vars() {
 	unset REPLY; REPLY=
 	local -i total_shifts=0
 
-	if [ "$1" = '-f' ]; then
+	local __bake_arg=
+	for arg; do case $arg in
+	-f)
 		BAKE_FILE=$2
 		if [ -z "$BAKE_FILE" ]; then
 			__bake_internal_die 'File must not be empty. Exiting'
 		fi
-		total_shifts=$((total_shifts + 2))
+		((total_shifts += 2))
+		if ! shift 2; then
+			__bake_internal_die 'Failed to shift'
+		fi
 
 		if [ ! -e "$BAKE_FILE" ]; then
 			__bake_internal_die "Specified file '$BAKE_FILE' does not exist"
@@ -146,7 +151,14 @@ __bake_set_vars() {
 		if [ ! -f "$BAKE_FILE" ]; then
 			__bake_internal_die "Specified path '$BAKE_FILE' is not actually a file"
 		fi
-	fi
+		;;
+	-h)
+		cat <<-EOF
+		Usage: bake [-h] [-f <Bakefile>] [var1=key1 ...] <task> [args ...]
+		EOF
+		__bake_print_tasks
+		exit
+	esac done
 
 	if [ -n "$BAKE_FILE" ]; then
 		BAKE_ROOT=$(
