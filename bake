@@ -153,11 +153,10 @@ __bake_set_vars() {
 		fi
 		;;
 	-h)
-		cat <<-EOF
-		Usage: bake [-h] [-f <Bakefile>] [var1=key1 ...] <task> [args ...]
-		EOF
-		__bake_print_tasks
-		exit
+		local flag_help='yes'
+		if ! shift; then
+			__bake_internal_die 'Failed to shift'
+		fi
 	esac done
 
 	if [ -n "$BAKE_FILE" ]; then
@@ -184,6 +183,14 @@ __bake_set_vars() {
 			__bake_internal_die "Could not find 'Bakefile.sh'"
 		fi
 		BAKE_FILE="$BAKE_ROOT/Bakefile.sh"
+	fi
+
+	if [ "$flag_help" = 'yes' ]; then
+		cat <<-EOF
+		Usage: bake [-h] [-f <Bakefile>] [var=value ...] <task> [args ...]
+		EOF
+		__bake_print_tasks
+		exit
 	fi
 
 	REPLY=$total_shifts
