@@ -55,7 +55,11 @@ __bake_trap_err() {
 # @exitcode 1 if should not print color
 # @internal
 __bake_is_color() {
-	! [[ -v NO_COLOR || $TERM == dumb ]]
+	if [[ -v NO_COLOR || $TERM == dumb ]]; then
+		return 1
+	else
+		return 0
+	fi
 }
 
 # @description Prints `$1` formatted as an internal Bake error to standard error
@@ -275,7 +279,7 @@ bake.cfg() {
 
 	case $cfg in
 		stacktrace)
-			__bake_cfg_stacktrace=$2
+			__bake_cfg_stacktrace=$value
 	esac
 }
 
