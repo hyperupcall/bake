@@ -232,9 +232,16 @@ bake.info() {
 	fi
 }
 
+# @description Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
+# @arg $@ string Variable names to print
+# @see bake.assert_not_empty
+bake.assert_nonempty() {
+	bake.assert_not_empty
+}
+
 # @description Dies if any of the supplied variables are empty
 # @arg $@ string Variable names to print
-bake.assert_nonempty() {
+bake.assert_not_empty() {
 	local variable_name=
 	for variable_name; do
 		local -n variable="$variable_name"

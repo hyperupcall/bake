@@ -23,7 +23,9 @@ Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 * [bake.warn()](#bakewarn)
 * [bake.info()](#bakeinfo)
 * [bake.assert_nonempty()](#bakeassert_nonempty)
+* [bake.assert_not_empty()](#bakeassert_not_empty)
 * [bake.assert_cmd()](#bakeassert_cmd)
+* [bake.cfg()](#bakecfg)
 
 ### bake.die()
 
@@ -58,6 +60,18 @@ Dies if any of the supplied variables are empty
 
 * **...** (string): Variable names to print
 
+#### See also
+
+* [bake.assert_not_empty](#bakeassert_not_empty)
+
+### bake.assert_not_empty()
+
+Dies if any of the supplied variables are empty
+
+#### Arguments
+
+* **...** (string): Variable names to print
+
 ### bake.assert_cmd()
 
 Dies if a command cannot be found
@@ -65,4 +79,13 @@ Dies if a command cannot be found
 #### Arguments
 
 * **$1** (string): Command to test for existence
+
+### bake.cfg()
+
+Edit configuration that affects the behavior of Bake
+
+#### Arguments
+
+* **$1** (string): Configuration option to change
+* **$2** (string): Value of configuration property
 
