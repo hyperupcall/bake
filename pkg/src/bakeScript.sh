@@ -73,6 +73,17 @@ __bake_internal_error() {
 	fi
 } >&2
 
+# @description Prints `$1` formatted as an internal Bake warning to standard error
+# @arg $1 Text to print
+# @internal
+__bake_internal_warn() {
+	if __bake_is_color; then
+		printf "\033[0;33m%s:\033[0m %s\n" "Warn (bake)" "$1"
+	else
+		printf '%s: %s\n' 'Warn (bake)' "$1"
+	fi
+} >&2
+
 # @description Calls `__bake_internal_error` and terminates with code 1
 # @arg $1 string Text to print
 # @internal
@@ -240,6 +251,7 @@ bake.info() {
 # @arg $@ string Variable names to print
 # @see bake.assert_not_empty
 bake.assert_nonempty() {
+	__bake_internal_warn "Function 'bake.assert_nonempty' is deprecated. Please use 'bake.assert_not_empty' instead"
 	bake.assert_not_empty
 }
 
