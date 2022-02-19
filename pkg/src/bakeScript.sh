@@ -20,6 +20,90 @@ if [ "$0" != "${BASH_SOURCE[0]}" ] && [ "$BAKE_INTERNAL_CAN_SOURCE" != 'yes' ]; 
 	return 1
 fi
 
+# @description Prints `$1` formatted as an error and the stacktrace to standard error,
+# then exits with code 1
+# @arg $1 string Text to print
+bake.die() {
+	if [ -n "$1" ]; then
+		__bake_error "$1. Exiting"
+	else
+		__bake_error 'Exiting'
+	fi
+	__bake_print_big '<- ERROR'
+
+	__bake_print_stacktrace
+
+	exit 1
+}
+
+# @description Prints `$1` formatted as a warning to standard error
+# @arg $1 string Text to print
+bake.warn() {
+	if __bake_is_color; then
+		printf "\033[1;33m%s:\033[0m %s\n" 'Warn' "$1"
+	else
+		printf '%s: %s\n' 'Warn' "$1"
+	fi
+} >&2
+
+# @description Prints `$1` formatted as information to standard output
+# @arg $1 string Text to print
+bake.info() {
+	if __bake_is_color; then
+		printf "\033[0;34m%s:\033[0m %s\n" 'Info' "$1"
+	else
+		printf '%s: %s\n' 'Info' "$1"
+	fi
+}
+
+# @description Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
+# @arg $@ string Variable names to print
+# @see bake.assert_not_empty
+bake.assert_nonempty() {
+	__bake_internal_warn "Function 'bake.assert_nonempty' is deprecated. Please use 'bake.assert_not_empty' instead"
+	bake.assert_not_empty
+}
+
+# @description Dies if any of the supplied variables are empty
+# @arg $@ string Variable names to print
+bake.assert_not_empty() {
+	local variable_name=
+	for variable_name; do
+		local -n variable="$variable_name"
+
+		if [ -z "$variable" ]; then
+			bake.die "Failed because variable '$variable_name' is empty"
+		fi
+	done; unset -v variable_name
+}
+
+# @description Dies if a command cannot be found
+# @arg $1 string Command to test for existence
+bake.assert_cmd() {
+	local cmd=$1
+
+	if [ -z "$cmd" ]; then
+		bake.die "Argument must not be empty"
+	fi
+
+	if ! command -v "$cmd" &>/dev/null; then
+		bake.die "Failed to find command '$cmd'. Please install it before continuing"
+	fi
+}
+
+# @description Edit configuration that affects the behavior of Bake
+# @arg $1 string Configuration option to change
+# @arg $2 string Value of configuration property
+bake.cfg() {
+	local cfg=$1
+	local value=$2
+
+	case $cfg in
+		stacktrace)
+			__bake_cfg_stacktrace=$value
+	esac
+}
+
 # @description Prints stacktrace
 # @internal
 __bake_print_stacktrace() {
@@ -209,90 +293,6 @@ __bake_set_vars() {
 	fi
 
 	REPLY=$total_shifts
-}
-
-# @description Prints `$1` formatted as an error and the stacktrace to standard error,
-# then exits with code 1
-# @arg $1 string Text to print
-bake.die() {
-	if [ -n "$1" ]; then
-		__bake_error "$1. Exiting"
-	else
-		__bake_error 'Exiting'
-	fi
-	__bake_print_big '<- ERROR'
-
-	__bake_print_stacktrace
-
-	exit 1
-}
-
-# @description Prints `$1` formatted as a warning to standard error
-# @arg $1 string Text to print
-bake.warn() {
-	if __bake_is_color; then
-		printf "\033[1;33m%s:\033[0m %s\n" 'Warn' "$1"
-	else
-		printf '%s: %s\n' 'Warn' "$1"
-	fi
-} >&2
-
-# @description Prints `$1` formatted as information to standard output
-# @arg $1 string Text to print
-bake.info() {
-	if __bake_is_color; then
-		printf "\033[0;34m%s:\033[0m %s\n" 'Info' "$1"
-	else
-		printf '%s: %s\n' 'Info' "$1"
-	fi
-}
-
-# @description Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
-# @arg $@ string Variable names to print
-# @see bake.assert_not_empty
-bake.assert_nonempty() {
-	__bake_internal_warn "Function 'bake.assert_nonempty' is deprecated. Please use 'bake.assert_not_empty' instead"
-	bake.assert_not_empty
-}
-
-# @description Dies if any of the supplied variables are empty
-# @arg $@ string Variable names to print
-bake.assert_not_empty() {
-	local variable_name=
-	for variable_name; do
-		local -n variable="$variable_name"
-
-		if [ -z "$variable" ]; then
-			bake.die "Failed because variable '$variable_name' is empty"
-		fi
-	done; unset -v variable_name
-}
-
-# @description Dies if a command cannot be found
-# @arg $1 string Command to test for existence
-bake.assert_cmd() {
-	local cmd=$1
-
-	if [ -z "$cmd" ]; then
-		bake.die "Argument must not be empty"
-	fi
-
-	if ! command -v "$cmd" &>/dev/null; then
-		bake.die "Failed to find command '$cmd'. Please install it before continuing"
-	fi
-}
-
-# @description Edit configuration that affects the behavior of Bake
-# @arg $1 string Configuration option to change
-# @arg $2 string Value of configuration property
-bake.cfg() {
-	local cfg=$1
-	local value=$2
-
-	case $cfg in
-		stacktrace)
-			__bake_cfg_stacktrace=$value
-	esac
 }
 
 __bake_main() {
