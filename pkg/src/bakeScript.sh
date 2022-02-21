@@ -61,7 +61,7 @@ bake.info() {
 # @see bake.assert_not_empty
 bake.assert_nonempty() {
 	__bake_internal_warn "Function 'bake.assert_nonempty' is deprecated. Please use 'bake.assert_not_empty' instead"
-	bake.assert_not_empty
+	bake.assert_not_empty "$@"
 }
 
 # @description Dies if any of the supplied variables are empty
@@ -69,9 +69,9 @@ bake.assert_nonempty() {
 bake.assert_not_empty() {
 	local variable_name=
 	for variable_name; do
-		local -n variable="$variable_name"
+		local -n ____variable="$variable_name"
 
-		if [ -z "$variable" ]; then
+		if [ -z "$____variable" ]; then
 			bake.die "Failed because variable '$variable_name' is empty"
 		fi
 	done; unset -v variable_name
