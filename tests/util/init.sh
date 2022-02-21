@@ -2,7 +2,7 @@
 
 eval "$(basalt-package-init)"
 basalt.package-init || exit
-basalt.package-load || exit
+basalt.package-load
 basalt.load 'github.com/hyperupcall/bats-all' 'load.bash' || exit
 
 load './util/test_utils.sh'

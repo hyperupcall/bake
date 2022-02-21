@@ -311,6 +311,7 @@ __bake_main() {
 		__bake_internal_die 'Failed to shift'
 	fi
 
+	# shellcheck disable=SC1007
 	local __bake_key= __bake_value=
 	local __bake_arg=
 	for __bake_arg; do case $__bake_arg in
