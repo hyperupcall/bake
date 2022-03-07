@@ -115,7 +115,7 @@ __bake_print_stacktrace() {
 		fi
 
 		local i=
-		for ((i=0;i<${#FUNCNAME[@]}-1;i++)); do
+		for ((i=0; i<${#FUNCNAME[@]}-1; i++)); do
 			local __bash_source=${BASH_SOURCE[$i]}; __bash_source="${__bash_source##*/}"
 			printf '%s\n' "  in ${FUNCNAME[$i]} ($__bash_source:${BASH_LINENO[$i-1]})"
 		done; unset -v i __bash_source
