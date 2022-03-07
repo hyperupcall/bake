@@ -18,6 +18,7 @@ When applicable, I have an _idempotent_ `task.init` task for executing right aft
 ```bash
 task.init() {
   hookah init
+  git submodule update --init --recursive
 
   pnpm install
 }
