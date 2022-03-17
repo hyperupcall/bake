@@ -99,8 +99,15 @@ bake.cfg() {
 	local value=$2
 
 	case $cfg in
-		stacktrace)
-			__bake_cfg_stacktrace=$value
+	stacktrace)
+		case $value in
+			on|off) __bake_cfg_stacktrace=$value ;;
+			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
+		esac
+		;;
+	*)
+		__bake_internal_die2 "No config property matched '$cfg'"
+		;;
 	esac
 }
 
@@ -172,6 +179,16 @@ __bake_internal_warn() {
 # @arg $1 string Text to print
 # @internal
 __bake_internal_die() {
+	__bake_internal_error "$1. Exiting"
+	exit 1
+}
+
+# @description Calls `__bake_internal_error` and terminates with code 1
+# @arg $1 string Text to print
+# @internal
+__bake_internal_die2() {
+	__bake_print_big '<- ERROR'
+
 	__bake_internal_error "$1. Exiting"
 	exit 1
 }
