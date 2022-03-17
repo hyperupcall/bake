@@ -313,7 +313,7 @@ __bake_set_vars() {
 }
 
 __bake_main() {
-	__bake_cfg_stacktrace='yes'
+	__bake_cfg_stacktrace='no'
 
 	set -Eeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
