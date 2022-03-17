@@ -54,11 +54,11 @@ Prints `$1` formatted as information to standard output
 
 ### bake.assert_nonempty()
 
-Dies if any of the supplied variables are empty
+Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
 
 #### Arguments
 
-* **...** (string): Variable names to print
+* **...** (string): Names of variables to check for emptiness
 
 #### See also
 
@@ -70,7 +70,7 @@ Dies if any of the supplied variables are empty
 
 #### Arguments
 
-* **...** (string): Variable names to print
+* **...** (string): Names of variables to check for emptiness
 
 ### bake.assert_cmd()
 
@@ -78,14 +78,14 @@ Dies if a command cannot be found
 
 #### Arguments
 
-* **$1** (string): Command to test for existence
+* **$1** (string): Command name to test for existence
 
 ### bake.cfg()
 
-Edit configuration that affects the behavior of Bake
+Change the behavior of Bake
 
 #### Arguments
 
-* **$1** (string): Configuration option to change
-* **$2** (string): Value of configuration property
+* **$1** (string): Name of config property to change
+* **$2** (string): New value of config property
 

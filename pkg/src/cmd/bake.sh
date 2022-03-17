@@ -8,7 +8,7 @@ main.bake() {
 
 	# Set `BAKE_{ROOT,FILE}`
 	BAKE_ROOT=; BAKE_FILE=
-	__bake_set_vars "$@"
+	__bake_parse_args "$@"
 
 	if ! cp -f "$bake_script" "$BAKE_ROOT/bake"; then
 		__bake_internal_die "Failed to copy 'bakeScript.sh'"

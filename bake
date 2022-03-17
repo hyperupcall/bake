@@ -57,7 +57,7 @@ bake.info() {
 }
 
 # @description Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
-# @arg $@ string Variable names to print
+# @arg $@ string Names of variables to check for emptiness
 # @see bake.assert_not_empty
 bake.assert_nonempty() {
 	__bake_internal_warn "Function 'bake.assert_nonempty' is deprecated. Please use 'bake.assert_not_empty' instead"
@@ -65,7 +65,7 @@ bake.assert_nonempty() {
 }
 
 # @description Dies if any of the supplied variables are empty
-# @arg $@ string Variable names to print
+# @arg $@ string Names of variables to check for emptiness
 bake.assert_not_empty() {
 	local variable_name=
 	for variable_name; do
@@ -78,7 +78,7 @@ bake.assert_not_empty() {
 }
 
 # @description Dies if a command cannot be found
-# @arg $1 string Command to test for existence
+# @arg $1 string Command name to test for existence
 bake.assert_cmd() {
 	local cmd=$1
 
@@ -91,9 +91,9 @@ bake.assert_cmd() {
 	fi
 }
 
-# @description Edit configuration that affects the behavior of Bake
-# @arg $1 string Configuration option to change
-# @arg $2 string Value of configuration property
+# @description Change the behavior of Bake
+# @arg $1 string Name of config property to change
+# @arg $2 string New value of config property
 bake.cfg() {
 	local cfg=$1
 	local value=$2
@@ -122,20 +122,20 @@ __bake_print_stacktrace() {
 		fi
 
 		local i=
-		for ((i=0; i<${#FUNCNAME[@]}-1; i++)); do
-			local __bash_source=${BASH_SOURCE[$i]}; __bash_source="${__bash_source##*/}"
+		for ((i=0; i<${#FUNCNAME[@]}-1; ++i)); do
+			local __bash_source="${BASH_SOURCE[$i]}"; __bash_source="${__bash_source##*/}"
 			printf '%s\n' "  in ${FUNCNAME[$i]} ($__bash_source:${BASH_LINENO[$i-1]})"
 		done; unset -v i __bash_source
 	fi
 } >&2
 
-# @description Function 'trap' calls on 'ERR'
+# @description Function that is executed when the 'ERR' event is trapped
 # @internal
 __bake_trap_err() {
 	local error_code=$?
 
 	__bake_print_big "<- ERROR"
-	__bake_internal_error "Your 'Bakefile.sh' did not exit successfully"
+	__bake_internal_error "Your Bakefile did not exit successfully"
 	__bake_print_stacktrace
 
 	exit $error_code
@@ -151,6 +151,25 @@ __bake_is_color() {
 	else
 		return 0
 	fi
+}
+
+# @description Calls `__bake_internal_error` and terminates with code 1
+# @arg $1 string Text to print
+# @internal
+__bake_internal_die() {
+	__bake_internal_error "$1. Exiting"
+	exit 1
+}
+
+# @description Calls `__bake_internal_error` and terminates with code 1. Before
+# doing so, it closes with "<- ERROR" big text
+# @arg $1 string Text to print
+# @internal
+__bake_internal_die2() {
+	__bake_print_big '<- ERROR'
+
+	__bake_internal_error "$1. Exiting"
+	exit 1
 }
 
 # @description Prints `$1` formatted as an internal Bake error to standard error
@@ -175,25 +194,8 @@ __bake_internal_warn() {
 	fi
 } >&2
 
-# @description Calls `__bake_internal_error` and terminates with code 1
-# @arg $1 string Text to print
-# @internal
-__bake_internal_die() {
-	__bake_internal_error "$1. Exiting"
-	exit 1
-}
-
-# @description Calls `__bake_internal_error` and terminates with code 1
-# @arg $1 string Text to print
-# @internal
-__bake_internal_die2() {
-	__bake_print_big '<- ERROR'
-
-	__bake_internal_error "$1. Exiting"
-	exit 1
-}
-
-# @description Prints `$1` formatted as an error to standard error
+# @description Prints `$1` formatted as an error to standard error. This is not called because
+# I do not wish to surface a public 'bake.error' function. All errors should halt execution
 # @arg $1 string Text to print
 # @internal
 __bake_error() {
@@ -204,7 +206,7 @@ __bake_error() {
 	fi
 } >&2
 
-# @description Nicely prints all 'Basalt.sh' tasks to standard output
+# @description Nicely prints all 'Bakefile.sh' tasks to standard output
 # @internal
 __bake_print_tasks() {
 	# shellcheck disable=SC1007,SC2034
@@ -245,7 +247,11 @@ __bake_print_big() {
 	fi
 } >&2
 
-__bake_set_vars() {
+# @description Parses the arguments. This also includes setting the the 'BAKE_ROOT'
+# and 'BAKE_FILE' variables
+# @set REPLY Number of times to shift
+# @internal
+__bake_parse_args() {
 	unset REPLY; REPLY=
 	local -i total_shifts=0
 
@@ -254,7 +260,7 @@ __bake_set_vars() {
 	-f)
 		BAKE_FILE=$2
 		if [ -z "$BAKE_FILE" ]; then
-			__bake_internal_die 'File must not be empty. Exiting'
+			__bake_internal_die "A value was not specified for for flag '-f"
 		fi
 		((total_shifts += 2))
 		if ! shift 2; then
@@ -265,7 +271,7 @@ __bake_set_vars() {
 			__bake_internal_die "Specified file '$BAKE_FILE' does not exist"
 		fi
 		if [ ! -f "$BAKE_FILE" ]; then
-			__bake_internal_die "Specified path '$BAKE_FILE' is not actually a file"
+			__bake_internal_die "Specified file '$BAKE_FILE' is not actually a file"
 		fi
 		;;
 	-h)
@@ -296,7 +302,7 @@ __bake_set_vars() {
 
 			printf '%s' "$PWD"
 		); then
-			__bake_internal_die "Could not find 'Bakefile.sh'"
+			__bake_internal_die "Failed to find 'Bakefile.sh'"
 		fi
 		BAKE_FILE="$BAKE_ROOT/Bakefile.sh"
 	fi
@@ -312,18 +318,21 @@ __bake_set_vars() {
 	REPLY=$total_shifts
 }
 
+# @description Main function
+# @internal
 __bake_main() {
 	__bake_cfg_stacktrace='no'
 
 	set -Eeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
-	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' LC_MONETARY='C' LC_MESSAGES='C' \
-		LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
+	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' LC_MONETARY='C' \
+		LC_MESSAGES='C' LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' LC_TELEPHONE='C' \
+		LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
 
 	# Set `BAKE_{ROOT,FILE}`
 	BAKE_ROOT=; BAKE_FILE=
-	__bake_set_vars "$@"
+	__bake_parse_args "$@"
 	if ! shift "$REPLY"; then
 		__bake_internal_die 'Failed to shift'
 	fi
