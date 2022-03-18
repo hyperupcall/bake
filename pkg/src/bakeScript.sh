@@ -346,9 +346,9 @@ __bake_main() {
 
 	set -ETeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
-	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' LC_MONETARY='C' \
-		LC_MESSAGES='C' LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' LC_TELEPHONE='C' \
-		LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
+	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' \
+		LC_MONETARY='C' LC_MESSAGES='C' LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' \
+		LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
 	bake.cfg pedantic-task-cd 'no'
 
