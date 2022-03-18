@@ -101,8 +101,8 @@ bake.cfg() {
 	case $cfg in
 	stacktrace)
 		case $value in
-			on|off) __bake_cfg_stacktrace=$value ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
+			yes|no) __bake_cfg_stacktrace=$value ;;
+			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'yes' or 'no'" ;;
 		esac
 		;;
 	*)
