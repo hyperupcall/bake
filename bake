@@ -123,7 +123,7 @@ __bake_print_stacktrace() {
 
 		local i=
 		for ((i=0; i<${#FUNCNAME[@]}-1; ++i)); do
-			local __bash_source="${BASH_SOURCE[$i]}"; __bash_source="${__bash_source##*/}"
+			local __bash_source="${BASH_SOURCE[$i]}"; __bash_source=${__bash_source##*/}
 			printf '%s\n' "  in ${FUNCNAME[$i]} ($__bash_source:${BASH_LINENO[$i-1]})"
 		done; unset -v i __bash_source
 	fi
@@ -139,6 +139,20 @@ __bake_trap_err() {
 	__bake_print_stacktrace
 
 	exit $error_code
+} >&2
+
+__global_bake_trap_debug_current_function=
+__bake_trap_debug() {
+	local current_function="${FUNCNAME[1]}"
+
+	if [[ $current_function != "$__global_bake_trap_debug_current_function" \
+			&& $current_function == task.* ]]; then
+		if ! cd "$BAKE_ROOT"; then
+			__bake_internal_die "Failed to cd to \$BAKE_ROOT"
+		fi
+	fi
+
+	__global_bake_trap_debug_current_function=$current_function
 } >&2
 
 # @description Test whether color should be outputed
@@ -323,12 +337,13 @@ __bake_parse_args() {
 __bake_main() {
 	__bake_cfg_stacktrace='no'
 
-	set -Eeo pipefail
+	set -ETeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
 	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' LC_MONETARY='C' \
 		LC_MESSAGES='C' LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' LC_TELEPHONE='C' \
 		LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
+	trap '__bake_trap_debug' 'DEBUG'
 
 	# Set `BAKE_{ROOT,FILE}`
 	BAKE_ROOT=; BAKE_FILE=
