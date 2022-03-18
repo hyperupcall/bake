@@ -135,7 +135,7 @@ __bake_trap_err() {
 	local error_code=$?
 
 	__bake_print_big "<- ERROR"
-	__bake_internal_error "Your Bakefile did not exit successfully"
+	__bake_internal_error "Your Bakefile did not exit successfully (exit code $error_code)"
 	__bake_print_stacktrace
 
 	exit $error_code
