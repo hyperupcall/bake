@@ -105,6 +105,13 @@ bake.cfg() {
 			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'yes' or 'no'" ;;
 		esac
 		;;
+	pedantic-task-cd)
+		case $value in
+			yes) trap '__bake_trap_debug' 'DEBUG' ;;
+			no) trap - 'DEBUG' ;;
+			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'yes' or 'no'" ;;
+		esac
+		;;
 	*)
 		__bake_internal_die2 "No config property matched '$cfg'"
 		;;
@@ -343,7 +350,7 @@ __bake_main() {
 		LC_MESSAGES='C' LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' LC_TELEPHONE='C' \
 		LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
-	trap '__bake_trap_debug' 'DEBUG'
+	bake.cfg pedantic-task-cd 'no'
 
 	# Set `BAKE_{ROOT,FILE}`
 	BAKE_ROOT=; BAKE_FILE=
