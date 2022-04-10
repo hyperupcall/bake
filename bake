@@ -91,7 +91,7 @@ bake.assert_cmd() {
 	fi
 }
 
-# @description Change the behavior of Bake
+# @description Change the behavior of Bake. See [guide.md](./docs/guide.md) for details
 # @arg $1 string Name of config property to change
 # @arg $2 string New value of config property
 bake.cfg() {
