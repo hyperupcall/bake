@@ -15,3 +15,14 @@ task.release() {
 	sed -ie "s|\(\t\tlocal bake_version='\)\(.*\)\('.*\)|\1$version\3|" './pkg/src/bakeScript.sh'
 	basalt releases "$version"
 }
+
+task.release-post() {
+	local version{1,2}=
+	
+	version1=$(sed -ne "s|\t\tlocal bake_version='\(.*\)'.*|\1|p" './pkg/src/bakeScript.sh')
+	version2=$(sed -ne "s|version = '\(.*\)'|\1|p" './basalt.toml')
+
+	if [ "$version1" != "$version2" ]; then
+		bake.die "Version '$version1' and version '$version2' do not match"
+	fi
+}
