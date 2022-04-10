@@ -230,15 +230,27 @@ __bake_error() {
 # @description Nicely prints all 'Bakefile.sh' tasks to standard output
 # @internal
 __bake_print_tasks() {
+	printf '%s\n' 'Tasks:'
+	local str=
+
 	# shellcheck disable=SC1007,SC2034
 	local regex="^(([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)).*"
 	local line=
-	printf '%s\n' 'Tasks:'
 	while IFS= read -r line || [ -n "$line" ]; do
 		if [[ "$line" =~ $regex ]]; then
-			printf '%s\n' "  -> ${BASH_REMATCH[3]}"
+			str+="  -> ${BASH_REMATCH[3]}"$'\n'
 		fi
 	done < "$BAKE_FILE"; unset -v line
+
+	if [ -z "$str" ]; then
+		if __bake_is_color; then
+			str=$'  \033[3mno tasks\033[0m\n'
+		else
+			str=$'  no tasks\n'
+		fi
+	fi
+
+	printf '%s' "$str"
 } >&2
 
 # @description Prints text that takes up the whole terminal width
