@@ -16,7 +16,7 @@
 # Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 
 if [ "$0" != "${BASH_SOURCE[0]}" ] && [ "$BAKE_INTERNAL_CAN_SOURCE" != 'yes' ]; then
-	printf '%s\n' "Error: This file should not be sourced" >&2
+	printf '%s\n' 'Error: This file should not be sourced' >&2
 	return 1
 fi
 
@@ -276,6 +276,7 @@ __bake_parse_args() {
 	unset REPLY; REPLY=
 	local -i total_shifts=0
 
+	# FIXME: bug for when passing -v to child task argument
 	local __bake_arg=
 	for arg; do case $arg in
 	-f)
@@ -295,6 +296,10 @@ __bake_parse_args() {
 			__bake_internal_die "Specified file '$BAKE_FILE' is not actually a file"
 		fi
 		;;
+	-v)
+		local bake_version='2'
+		printf '%s\n' "Version: $bake_version"
+		;;
 	-h)
 		local flag_help='yes'
 		if ! shift; then
@@ -311,7 +316,7 @@ __bake_parse_args() {
 		BAKE_FILE="$BAKE_ROOT/${BAKE_FILE##*/}"
 	else
 		if ! BAKE_ROOT=$(
-			while [ ! -f 'Bakefile.sh' ] && [ "$PWD" != / ]; do
+			while [ ! -f './Bakefile.sh' ] && [ "$PWD" != / ]; do
 				if ! cd ..; then
 					exit 1
 				fi
@@ -329,8 +334,8 @@ __bake_parse_args() {
 	fi
 
 	if [ "$flag_help" = 'yes' ]; then
-		cat <<-EOF
-		Usage: bake [-h] [-f <Bakefile>] [var=value ...] <task> [args ...]
+		cat <<-"EOF"
+		Usage: bake [-h|-v] [-f <Bakefile>] [var=value ...] <task> [args ...]
 		EOF
 		__bake_print_tasks
 		exit
