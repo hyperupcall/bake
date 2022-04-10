@@ -3,4 +3,5 @@
 source "${0%/*}/.hookah/lib.sh"
 hookah.init
 
-./bake docs
+hookah.run ./bake docs
+hookah.run git add ./docs/*

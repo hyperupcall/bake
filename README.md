@@ -58,7 +58,7 @@ $ echo $?
 1
 ```
 
-Prettified outputed is sent to standard error, so pipines works
+Prettified output is sent to standard error, so pipines works
 
 ```txt
 $ bake succeed 2>/dev/null | cat
@@ -81,14 +81,13 @@ To sum it up, _it just works_
 ## Features
 
 - Generates a `./bake` file, for use in CI, etc.
-- _Stacktrace_, `set`, `shopt`, `LANG` boilerplate all set up
-- Dead-simple, miniscule function API (see [api.md](./docs/api.md) for details)
-- `POSIX` compliant
-- Automatically `cd`'s to directory contaning shell script
+- `set`, `shopt`, `LANG`, (optionally _stacktrace_) boilerplate all set up
+- Set variables à la make: `bake key1=value1 key2=value2 docs`
+- POSIX compliant
+- Automatically `cd`'s to directory contaning Bakefile
 - Pass `-f` to manually specify Bakefile
-- Use `init()` function to specify always-running scripts
-- Set à la make like `bake key1=value1 key2=value2 docs`
-- `bake.cfg` to modify options. Currently `bake.cfg stacktrace yes` works
+- Dead-simple, miniscule function API (see [api.md](./docs/api.md) for details)
+- Use `init()` function to run code before any task execution
 
 ## Installation
 

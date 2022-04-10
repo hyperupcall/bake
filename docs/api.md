@@ -82,7 +82,7 @@ Dies if a command cannot be found
 
 ### bake.cfg()
 
-Change the behavior of Bake
+Change the behavior of Bake. See [guide.md](./docs/guide.md) for details
 
 #### Arguments
 
