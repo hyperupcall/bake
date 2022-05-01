@@ -244,9 +244,9 @@ __bake_print_tasks() {
 
 	if [ -z "$str" ]; then
 		if __bake_is_color; then
-			str=$'  \033[3mno tasks\033[0m\n'
+			str=$'  \033[3mNo tasks\033[0m\n'
 		else
-			str=$'  no tasks\n'
+			str=$'  No tasks\n'
 		fi
 	fi
 
