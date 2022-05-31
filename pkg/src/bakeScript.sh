@@ -112,6 +112,12 @@ bake.cfg() {
 			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'yes' or 'no'" ;;
 		esac
 		;;
+	big-print)
+		case $value in
+			yes|no) ;;
+			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'yes' or 'no'" ;;
+		esac
+		;;
 	*)
 		__bake_internal_die2 "No config property matched '$cfg'"
 		;;
@@ -259,6 +265,10 @@ __bake_print_tasks() {
 __bake_print_big() {
 	local print_text="$1"
 
+	if [ "$__bake_cfg_big_print" = 'no' ]; then
+		return
+	fi
+
 	# shellcheck disable=SC1007
 	local _stty_height= _stty_width=
 	read -r _stty_height _stty_width < <(
@@ -360,6 +370,7 @@ __bake_parse_args() {
 # @internal
 __bake_main() {
 	__bake_cfg_stacktrace='no'
+	__bake_cfg_big_print='yes'
 
 	# Environment boilerplate
 	set -ETeo pipefail
@@ -417,6 +428,13 @@ __bake_main() {
 	__bake_task= source "$BAKE_FILE"
 
 	if declare -f task."$__bake_task" >/dev/null 2>&1; then
+		local grep_result=
+		if ! grep_result=$(grep -A 1 '^task.test[() \t]*{' "$BAKE_FILE"); then :; fi
+		grep_result=${grep_result##*$'\n'}
+		if [[ "$grep_result" == *big-print*no* ]]; then
+			__bake_cfg_big_print='no'
+		fi
+
 		__bake_print_big "-> RUNNING TASK '$__bake_task'"
 		if declare -f init >/dev/null 2>&1; then
 			init "$__bake_task"
