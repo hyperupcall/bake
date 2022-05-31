@@ -95,8 +95,8 @@ bake.assert_cmd() {
 # @arg $1 string Name of config property to change
 # @arg $2 string New value of config property
 bake.cfg() {
-	local cfg=$1
-	local value=$2
+	local cfg="$1"
+	local value="$2"
 
 	case $cfg in
 	stacktrace)
@@ -361,6 +361,7 @@ __bake_parse_args() {
 __bake_main() {
 	__bake_cfg_stacktrace='no'
 
+	# Environment boilerplate
 	set -ETeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
 	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' \
@@ -369,6 +370,7 @@ __bake_main() {
 	trap '__bake_trap_err' 'ERR'
 	bake.cfg pedantic-task-cd 'no'
 
+	# Parse arguments
 	# Set `BAKE_{ROOT,FILE}`
 	BAKE_ROOT=; BAKE_FILE=
 	__bake_parse_args "$@"
@@ -376,6 +378,7 @@ __bake_main() {
 		__bake_internal_die 'Failed to shift'
 	fi
 
+	# Set variables à la Make
 	# shellcheck disable=SC1007
 	local __bake_key= __bake_value=
 	local __bake_arg=
@@ -393,8 +396,8 @@ __bake_main() {
 			;;
 		*) break
 	esac done; unset -v __bake_arg
-	# Note: Don't unset '__bake_variable' or none of the variables will stay set
 	unset -v __bake_key __bake_value
+	unset -vn __bake_variable
 
 	local __bake_task="$1"
 	if [ -z "$__bake_task" ]; then

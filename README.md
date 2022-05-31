@@ -82,7 +82,7 @@ To sum it up, _it just works_
 
 - Generates a `./bake` file, for use in CI, etc.
 - `set`, `shopt`, `LANG`, (optionally _stacktrace_) boilerplate all set up
-- Set variables à la make: `bake key1=value1 key2=value2 docs`
+- Set variables à la Make: `bake key1=value1 key2=value2 docs`
 - POSIX compliant
 - Automatically `cd`'s to directory contaning Bakefile
 - Pass `-f` to manually specify Bakefile
