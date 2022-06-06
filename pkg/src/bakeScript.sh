@@ -428,12 +428,20 @@ __bake_main() {
 	__bake_task= source "$BAKE_FILE"
 
 	if declare -f task."$__bake_task" >/dev/null 2>&1; then
-		local grep_result=
-		if ! grep_result=$(grep -A 1 '^task.test[() \t]*{' "$BAKE_FILE"); then :; fi
-		grep_result=${grep_result##*$'\n'}
-		if [[ "$grep_result" == *big-print*no* ]]; then
-			__bake_cfg_big_print='no'
-		fi
+		local line=
+		local shouldTestNextLine='no'
+		while IFS= read -r line; do
+			if [ "$shouldTestNextLine" = 'yes' ]; then
+				if [[ $line == *'bake.cfg'*big-print*no* ]]; then
+					__bake_cfg_big_print='no'
+				fi
+				shouldTestNextLine='no'
+			fi
+
+			if [[ $line == @(task."$__bake_task"|init)*'('*')'*'{' ]]; then
+				shouldTestNextLine='yes'
+			fi
+		done < "$BAKE_FILE"; unset -v line shouldTestNextLine
 
 		__bake_print_big "-> RUNNING TASK '$__bake_task'"
 		if declare -f init >/dev/null 2>&1; then

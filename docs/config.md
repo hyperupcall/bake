@@ -6,19 +6,24 @@ Currently, there are three runtime configuration options with `bake.cfg`
 
 Prints a stacktrace when a task fails.
 
-This isn't enabled by default since the failed task is rarely an issue with Bake, but the underlying command line tool it executes. Not disabling it will unecessarily clog the terminal with useless text
+This isn't enabled by default since the failed task is rarely an issue with Bake, but the underlying command line tool it executes. Disabling it by defualt prevents unecessary clogging of the terminal
 
 ## `pedantic-task-cd`
 
-Ensures that the `$PWD` will _always_ be correct when running a task. In nearly all cases it is, with the sole exception being changing a directory mid-task and running another task from there.
+Ensures that the `$PWD` will _always_ be correct when running a task. Nearly always it is, with the only exception occuring for the case where a directory is changed within a task, and another task is manually ran
 
 This isn't enabled by default since it traps `DEBUG` (and therefore feels messy)
 
 ## `big-print`
 
-Sometimes, big decorative lines are printed, such as before and after executing a Task. This helps seeing which task is printed, but sometimes it can get in the way of things
+Big decorative lines are printed before and after execution of a task. This helps seeing which task is printed, but sometimes it can get in the way
 
-This option is special because the actual function only checks at runtime if you've passed 'yes' or 'no'. To properly use this, make sure that this config option is the _first line_ after the function declaration like so
+This config switch _*only*_ works if `bake.cfg ...` is called either:
+
+- On the first line of a `task.<TASK>()` function
+- On the first line of the `init()` function
+
+Like so:
 
 ```sh
 task.test() {
@@ -26,6 +31,4 @@ task.test() {
 }
 ```
 
-You can use single, double, or no quotes. If the line is anywhere else this will not work and silently fail. This behavior depends on the `-A` flag of grep, which is supported by GNU Grep, BSD Grep, BusyBox Grep (if built with it)
-
-This is enabled by default.
+This is enabled by default
