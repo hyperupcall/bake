@@ -1,4 +1,5 @@
 [package]
+type = 'app'
 name = 'bake'
 slug = 'bake'
 version = '1.8.0'
