@@ -2,7 +2,7 @@
 type = 'app'
 name = 'bake'
 slug = 'bake'
-version = '1.8.0'
+version = '1.8.1'
 authors = ['Edwin Kofler <edwin@kofler.dev>']
 description = 'A Bash-based Make alternative'
 
