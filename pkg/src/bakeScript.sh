@@ -272,7 +272,7 @@ __bake_print_big() {
 	# shellcheck disable=SC1007
 	local _stty_height= _stty_width=
 	read -r _stty_height _stty_width < <(
-		if command -v stty size &>/dev/null; then
+		if stty size &>/dev/null; then
 			stty size
 		else
 			if [ -n "$COLUMNS" ]; then
