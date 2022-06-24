@@ -21,7 +21,7 @@ task.release() {
 
 task.release-post() {
 	local version{1,2}=
-	
+
 	version1=$(sed -n "s|\t\tlocal bake_version='\(.*\)'.*|\1|p" './pkg/src/bakeScript.sh')
 	version2=$(sed -n "s|version = '\(.*\)'|\1|p" './basalt.toml')
 
