@@ -379,6 +379,7 @@ __bake_main() {
 		LC_MONETARY='C' LC_MESSAGES='C' LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' \
 		LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
+	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
 	bake.cfg pedantic-task-cd 'no'
 
 	# Parse arguments
