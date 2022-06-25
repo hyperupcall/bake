@@ -1,4 +1,4 @@
-# Guide
+# Tips
 
 Some recommendations for using Bake efficiently
 
