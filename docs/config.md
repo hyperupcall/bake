@@ -27,7 +27,7 @@ Like so:
 
 ```sh
 task.test() {
-  bake.cfg 'decorative-print' 'off'
+  bake.cfg 'big-print' 'off'
 }
 ```
 

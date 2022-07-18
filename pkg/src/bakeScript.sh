@@ -245,11 +245,22 @@ __bake_print_tasks() {
 	local str=
 
 	# shellcheck disable=SC1007,SC2034
-	local regex="^(([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)).*"
+	local regex="^([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)[[:space:]]*\{[[:space:]]*(#[[:space:]]*(.*))?"
 	local line=
 	while IFS= read -r line || [ -n "$line" ]; do
 		if [[ "$line" =~ $regex ]]; then
-			str+="  -> ${BASH_REMATCH[3]}"$'\n'
+			str+="  -> ${BASH_REMATCH[2]}"
+
+			local task_comment=${BASH_REMATCH[4]}
+			if [ -n "$task_comment" ]; then
+				if __bake_is_color; then
+					str+=$' \033[3m'"($task_comment)"$'\033[0m'
+				else
+					str+=" ($task_comment)"
+				fi
+			fi
+
+			str+=$'\n'
 		fi
 	done < "$BAKE_FILE"; unset -v line
 
