@@ -101,21 +101,26 @@ bake.cfg() {
 	case $cfg in
 	stacktrace)
 		case $value in
-			yes|no) __bake_cfg_stacktrace=$value ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'yes' or 'no'" ;;
+			yes) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg stacktrace' is deprecated. Instead, use either 'on' or 'off'"; __bake_cfg_stacktrace='on' ;;
+			no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg stacktrace' is deprecated. Instead, use either 'on' or 'off'"; __bake_cfg_stacktrace='off' ;;
+			on|off) __bake_cfg_stacktrace=$value ;;
+			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
 	pedantic-task-cd)
 		case $value in
-			yes) trap '__bake_trap_debug' 'DEBUG' ;;
-			no) trap - 'DEBUG' ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'yes' or 'no'" ;;
+			yes) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg pedantic-task-cd' is deprecated. Instead, use either 'on' or 'off'"; trap '__bake_trap_debug' 'DEBUG' ;;
+			no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg pedantic-task-cd' is deprecated. Instead, use either 'on' or 'off'"; trap - 'DEBUG' ;;
+			on) trap '__bake_trap_debug' 'DEBUG' ;;
+			off) trap - 'DEBUG' ;;
+			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
 	big-print)
 		case $value in
-			yes|no) ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'yes' or 'no'" ;;
+			yes|no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg big-print' is deprecated. Instead, use either 'on' or 'off'" ;;
+			on|off) ;;
+			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
 	*)
@@ -127,7 +132,7 @@ bake.cfg() {
 # @description Prints stacktrace
 # @internal
 __bake_print_stacktrace() {
-	if [ "$__bake_cfg_stacktrace" = 'yes' ]; then
+	if [ "$__bake_cfg_stacktrace" = 'on' ]; then
 		if __bake_is_color; then
 			printf '\033[4m%s\033[0m\n' 'Stacktrace:'
 		else
@@ -265,7 +270,7 @@ __bake_print_tasks() {
 __bake_print_big() {
 	local print_text="$1"
 
-	if [ "$__bake_cfg_big_print" = 'no' ]; then
+	if [ "$__bake_cfg_big_print" = 'off' ]; then
 		return
 	fi
 
@@ -373,8 +378,8 @@ __bake_parse_args() {
 # @description Main function
 # @internal
 __bake_main() {
-	__bake_cfg_stacktrace='no'
-	__bake_cfg_big_print='yes'
+	__bake_cfg_stacktrace='off'
+	__bake_cfg_big_print='on'
 
 	# Environment boilerplate
 	set -ETeo pipefail
@@ -384,7 +389,7 @@ __bake_main() {
 		LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
 	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
-	bake.cfg pedantic-task-cd 'no'
+	bake.cfg pedantic-task-cd 'off'
 
 	# Parse arguments
 	# Set `BAKE_{ROOT,FILE}`
@@ -437,8 +442,8 @@ __bake_main() {
 		local shouldTestNextLine='no'
 		while IFS= read -r line; do
 			if [ "$shouldTestNextLine" = 'yes' ]; then
-				if [[ $line == *'bake.cfg'*big-print*no* ]]; then
-					__bake_cfg_big_print='no'
+				if [[ $line == *'bake.cfg'*big-print*@(no|off)* ]]; then
+					__bake_cfg_big_print='off'
 				fi
 				shouldTestNextLine='no'
 			fi
