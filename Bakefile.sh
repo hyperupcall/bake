@@ -4,7 +4,7 @@ task.test() {
 	bats tests
 }
 
-task.docs() { # build Docs
+task.docs() { # build docs
 	shdoc < './pkg/src/bakeScript.sh' > './docs/api.md'
 }
 
