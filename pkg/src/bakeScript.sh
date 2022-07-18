@@ -341,6 +341,7 @@ __bake_parse_args() {
 	-v)
 		local bake_version='1.8.2'
 		printf '%s\n' "Version: $bake_version"
+		exit 0
 		;;
 	-h)
 		local flag_help='yes'
