@@ -347,7 +347,6 @@ __bake_parse_args() {
 	unset REPLY; REPLY=
 	local -i total_shifts=0
 
-	# FIXME: bug for when passing -v to child task argument
 	local __bake_arg=
 	for arg; do case $arg in
 	-f)
@@ -377,6 +376,10 @@ __bake_parse_args() {
 		if ! shift; then
 			__bake_internal_die 'Failed to shift'
 		fi
+		;;
+	*)
+		break
+		;;
 	esac done
 
 	if [ -n "$BAKE_FILE" ]; then
