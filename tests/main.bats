@@ -69,6 +69,7 @@ EOF
 
 	cat > "$f" <<"EOF"
 task.run() {
+	bake.cfg stacktrace 'on'
 	false
 }
 EOF
@@ -77,7 +78,7 @@ EOF
 
 	assert_failure
 	[[ "$output" == *'Stacktrace:'* ]]
-	[[ "$output" == *'in task.run (Bakefile.sh:2)'* ]]
+	[[ "$output" == *'in task.run (Bakefile.sh:3)'* ]]
 }
 
 @test "No stacktrace on error if option set" {
@@ -85,7 +86,6 @@ EOF
 
 	cat > "$f" <<"EOF"
 task.run() {
-	bake.cfg stacktrace no
 	false
 }
 EOF
