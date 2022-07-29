@@ -25,6 +25,7 @@ Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 * [bake.assert_nonempty()](#bakeassert_nonempty)
 * [bake.assert_not_empty()](#bakeassert_not_empty)
 * [bake.assert_cmd()](#bakeassert_cmd)
+* [bake.has_flag()](#bakehas_flag)
 * [bake.cfg()](#bakecfg)
 
 ### bake.die()
@@ -79,6 +80,15 @@ Dies if a command cannot be found
 #### Arguments
 
 * **$1** (string): Command name to test for existence
+
+### bake.has_flag()
+
+Determine if a flag was passed as an argument
+
+#### Arguments
+
+* **$1** (string): Flag name to test for
+* **...** (string): Rest of the arguments to search through
 
 ### bake.cfg()
 

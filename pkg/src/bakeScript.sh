@@ -91,6 +91,29 @@ bake.assert_cmd() {
 	fi
 }
 
+# @description Determine if a flag was passed as an argument
+# @arg $1 string Flag name to test for
+# @arg $@ string Rest of the arguments to search through
+bake.has_flag() {
+	local flag_name="$1"
+
+	if [ -z "$flag_name" ]; then
+		bake.die "Argument must not be empty"
+	fi
+	if ! shift; then
+		bake.die 'Failed to shift'
+	fi
+
+	local arg=
+	for arg; do
+		if [ "$arg" = "$flag_name" ]; then
+			return 0
+		fi
+	done; unset -v arg
+
+	return 1
+}
+
 # @description Change the behavior of Bake. See [guide.md](./docs/guide.md) for details
 # @arg $1 string Name of config property to change
 # @arg $2 string New value of config property
