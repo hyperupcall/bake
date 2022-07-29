@@ -201,11 +201,17 @@ __bake_trap_debug() {
 # @exitcode 1 if should not print color
 # @internal
 __bake_is_color() {
-	if [[ -v NO_COLOR || $TERM == dumb ]]; then
+	local fd="1"
+
+	if [[ ${NO_COLOR+x} || "$TERM" = 'dumb' ]]; then
 		return 1
-	else
+	fi
+
+	if [ -t "$fd" ]; then
 		return 0
 	fi
+
+	return 1
 }
 
 # @description Calls `__bake_internal_error` and terminates with code 1
