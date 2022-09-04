@@ -18,7 +18,7 @@ This isn't enabled by default since it traps `DEBUG` (and therefore feels messy)
 
 Big decorative lines are printed before and after execution of a task. This helps seeing which task is printed, but sometimes it can get in the way
 
-This config switch _*only*_ works if `bake.cfg ...` is called either:
+This config switch __only__ works if `bake.cfg ...` is called either:
 
 - On the first line of a `task.<TASK>()` function
 - On the first line of the `init()` function

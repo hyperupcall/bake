@@ -481,7 +481,7 @@ __bake_main() {
 	# Set variables à la Make
 	# shellcheck disable=SC1007
 	local __bake_key= __bake_value=
-	local __bake_arg=
+	local __bake_arg=1
 	for __bake_arg; do case $__bake_arg in
 		*=*)
 			IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
