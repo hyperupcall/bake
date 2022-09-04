@@ -378,6 +378,12 @@ __bake_parse_args() {
 			__bake_internal_die "Specified file '$BAKE_FILE' is not actually a file"
 		fi
 		;;
+	-w)
+		((total_shifts += 1))
+		if [[ ! -v 'BAKE_INTERNAL_NO_WATCH_OVERRIDE' ]]; then
+			FLAG_WATCH='yes'
+		fi
+		;;
 	-v)
 		local bake_version='1.9.0'
 		printf '%s\n' "Version: $bake_version"
@@ -422,7 +428,7 @@ __bake_parse_args() {
 
 	if [ "$flag_help" = 'yes' ]; then
 		cat <<-"EOF"
-		Usage: bake [-h|-v] [-f <Bakefile>] [var=value ...] <task> [args ...]
+		Usage: bake [-h|-v] [-w] [-f <Bakefile>] [var=value ...] <task> [args ...]
 		EOF
 		__bake_print_tasks
 		exit
@@ -449,7 +455,8 @@ __bake_main() {
 
 	# Parse arguments
 	# Set `BAKE_{ROOT,FILE}`
-	BAKE_ROOT=; BAKE_FILE=
+	BAKE_ROOT=; BAKE_FILE=; FLAG_WATCH=
+	__bake_original_args=("$@") # TODO: obsolete this
 	__bake_parse_args "$@"
 	if ! shift "$REPLY"; then
 		__bake_internal_die 'Failed to shift'
@@ -509,12 +516,39 @@ __bake_main() {
 			fi
 		done < "$BAKE_FILE"; unset -v line shouldTestNextLine
 
-		__bake_print_big "-> RUNNING TASK '$__bake_task'"
-		if declare -f init >/dev/null 2>&1; then
-			init "$__bake_task"
+		if [ "$FLAG_WATCH" = 'yes' ]; then
+			if ! command -v watchexec &>/dev/null; then
+				__bake_internal_die "Executable not found: 'watchexec'"
+			fi
+
+			local -a annotation_watch=()
+			local line=
+			while IFS= read -r line || [ -n "$line" ]; do
+				# function
+				if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?task\."$__bake_task"\(\)[[:space:]]*\{ ]]; then
+					break
+				fi
+
+				# watch
+				if [[ $line =~ ^[[:space:]]*#[[:space:]]watch:[[:space:]](.*?)$ ]]; then
+					readarray -td' ' annotation_watch <<< "${BASH_REMATCH[1]}"
+					annotation_watch[-1]=${annotation_watch[-1]::-1}
+				fi
+			done < "$BAKE_FILE"; unset -v line
+
+			# shellcheck disable=SC1007
+			BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${annotation_watch[@]}" "$BAKE_ROOT/bake" -- "${__bake_original_args[@]}"
+		else
+			__bake_print_big "-> RUNNING TASK '$__bake_task'"
+
+			if declare -f init >/dev/null 2>&1; then
+				init "$__bake_task"
+			fi
+
+			task."$__bake_task" "$@"
+
+			__bake_print_big "<- DONE"
 		fi
-		task."$__bake_task" "$@"
-		__bake_print_big "<- DONE"
 	else
 		__bake_internal_error "Task '$__bake_task' not found"
 		__bake_print_tasks

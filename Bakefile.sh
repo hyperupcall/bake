@@ -4,9 +4,8 @@ task.test() {
 	bats tests
 }
 
-
 # doc: build docs
-# watch: -w
+# watch: --ignore **/docs/* -c
 task.docs() {
 	shdoc < './pkg/src/bakeScript.sh' > './docs/api.md'
 }
