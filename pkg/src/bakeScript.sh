@@ -274,6 +274,7 @@ __bake_print_tasks() {
 
 	# shellcheck disable=SC1007,SC2034
 	local regex="^([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)[[:space:]]*\{[[:space:]]*(#[[:space:]]*(.*))?"
+	local -a task_flags=()
 	local line= annotation_doc=
 	while IFS= read -r line || [ -n "$line" ]; do
 		# doc
@@ -281,9 +282,19 @@ __bake_print_tasks() {
 			annotation_doc=${BASH_REMATCH[1]}
 		fi
 
+		# flag
+		if [[ $line =~ bake\.has_flag[[:space:]][\'\"]?([[:alnum:]]+) ]]; then
+			task_flags+=("[--${BASH_REMATCH[1]}]")
+		fi
+
 		if [[ $line =~ $regex ]]; then
 			local matched_function_name="${BASH_REMATCH[2]}"
 			local matched_comment="${BASH_REMATCH[4]}"
+
+			if ((${#task_flags[@]} > 0)); then
+				str+="       ${task_flags[*]}"$'\n'
+			fi
+			task_flags=()
 
 			str+="  -> $matched_function_name"
 
