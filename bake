@@ -275,11 +275,11 @@ __bake_print_tasks() {
 	# shellcheck disable=SC1007,SC2034
 	local regex="^([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)[[:space:]]*\{[[:space:]]*(#[[:space:]]*(.*))?"
 	local -a task_flags=()
-	local line= annotation_doc=
+	local line= task_docstring=
 	while IFS= read -r line || [ -n "$line" ]; do
 		# doc
 		if [[ $line =~ ^[[:space:]]*#[[:space:]]doc:[[:space:]](.*?) ]]; then
-			annotation_doc=${BASH_REMATCH[1]}
+			task_docstring=${BASH_REMATCH[1]}
 		fi
 
 		# flag
@@ -298,21 +298,21 @@ __bake_print_tasks() {
 
 			str+="  -> $matched_function_name"
 
-			if [[ -n "$matched_comment" || -n "$annotation_doc" ]]; then
+			if [[ -n "$matched_comment" || -n "$task_docstring" ]]; then
 				if [ -n "$matched_comment" ]; then
 					__bake_internal_warn "Adjacent documentation comments are deprecated. Instead, write a comment above 'task.$matched_function_name()' like so: '# doc: $matched_comment'"
-					annotation_doc=$matched_comment
+					task_docstring=$matched_comment
 				fi
 
 				if __bake_is_color; then
-					str+=$' \033[3m'"($annotation_doc)"$'\033[0m'
+					str+=$' \033[3m'"($task_docstring)"$'\033[0m'
 				else
-					str+=" ($annotation_doc)"
+					str+=" ($task_docstring)"
 				fi
 			fi
 
 			str+=$'\n'
-			annotation_doc=
+			task_docstring=
 		fi
 	done < "$BAKE_FILE"; unset -v line
 

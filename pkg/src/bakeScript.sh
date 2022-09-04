@@ -272,14 +272,13 @@ __bake_error() {
 __bake_print_tasks() {
 	local str=$'Tasks:\n'
 
-	# shellcheck disable=SC1007,SC2034
-	local regex="^([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)[[:space:]]*\{[[:space:]]*(#[[:space:]]*(.*))?"
 	local -a task_flags=()
-	local line= annotation_doc=
+	# shellcheck disable=SC1007
+	local line= task_docstring=
 	while IFS= read -r line || [ -n "$line" ]; do
 		# doc
 		if [[ $line =~ ^[[:space:]]*#[[:space:]]doc:[[:space:]](.*?) ]]; then
-			annotation_doc=${BASH_REMATCH[1]}
+			task_docstring=${BASH_REMATCH[1]}
 		fi
 
 		# flag
@@ -287,7 +286,7 @@ __bake_print_tasks() {
 			task_flags+=("[--${BASH_REMATCH[1]}]")
 		fi
 
-		if [[ $line =~ $regex ]]; then
+		if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)[[:space:]]*\{[[:space:]]*(#[[:space:]]*(.*))? ]]; then
 			local matched_function_name="${BASH_REMATCH[2]}"
 			local matched_comment="${BASH_REMATCH[4]}"
 
@@ -298,21 +297,21 @@ __bake_print_tasks() {
 
 			str+="  -> $matched_function_name"
 
-			if [[ -n "$matched_comment" || -n "$annotation_doc" ]]; then
+			if [[ -n "$matched_comment" || -n "$task_docstring" ]]; then
 				if [ -n "$matched_comment" ]; then
 					__bake_internal_warn "Adjacent documentation comments are deprecated. Instead, write a comment above 'task.$matched_function_name()' like so: '# doc: $matched_comment'"
-					annotation_doc=$matched_comment
+					task_docstring=$matched_comment
 				fi
 
 				if __bake_is_color; then
-					str+=$' \033[3m'"($annotation_doc)"$'\033[0m'
+					str+=$' \033[3m'"($task_docstring)"$'\033[0m'
 				else
-					str+=" ($annotation_doc)"
+					str+=" ($task_docstring)"
 				fi
 			fi
 
 			str+=$'\n'
-			annotation_doc=
+			task_docstring=
 		fi
 	done < "$BAKE_FILE"; unset -v line
 
@@ -454,7 +453,7 @@ __bake_main() {
 	__bake_cfg_stacktrace='off'
 	__bake_cfg_big_print='on'
 
-	# Environment boilerplate
+	# Environment and configuration boilerplate
 	set -ETeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
 	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' \
@@ -464,12 +463,14 @@ __bake_main() {
 	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
 	bake.cfg pedantic-task-cd 'off'
 
+	# Save argument list
+	declare -ga __bake_args_original=("$@")
+
 	# Parse arguments
 	# Set `BAKE_{ROOT,FILE}`
 	BAKE_ROOT=; BAKE_FILE=; FLAG_WATCH=
-	__bake_original_args=("$@") # TODO: obsolete this
 	__bake_parse_args "$@"
-	if ! shift "$REPLY"; then
+	if ! shift $REPLY; then
 		__bake_internal_die 'Failed to shift'
 	fi
 
@@ -513,19 +514,19 @@ __bake_main() {
 
 	if declare -f task."$__bake_task" >/dev/null 2>&1; then
 		local line=
-		local shouldTestNextLine='no'
+		local should_test_next_line='no'
 		while IFS= read -r line; do
-			if [ "$shouldTestNextLine" = 'yes' ]; then
+			if [ "$should_test_next_line" = 'yes' ]; then
 				if [[ $line == *'bake.cfg'*big-print*@(no|off)* ]]; then
 					__bake_cfg_big_print='off'
 				fi
-				shouldTestNextLine='no'
+				should_test_next_line='no'
 			fi
 
 			if [[ $line == @(task."$__bake_task"|init)*'('*')'*'{' ]]; then
-				shouldTestNextLine='yes'
+				should_test_next_line='yes'
 			fi
-		done < "$BAKE_FILE"; unset -v line shouldTestNextLine
+		done < "$BAKE_FILE"; unset -v line should_test_next_line
 
 		if [ "$FLAG_WATCH" = 'yes' ]; then
 			if ! command -v watchexec &>/dev/null; then
@@ -548,7 +549,7 @@ __bake_main() {
 			done < "$BAKE_FILE"; unset -v line
 
 			# shellcheck disable=SC1007
-			BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${annotation_watch[@]}" "$BAKE_ROOT/bake" -- "${__bake_original_args[@]}"
+			BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${annotation_watch[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
 		else
 			__bake_print_big "-> RUNNING TASK '$__bake_task'"
 
