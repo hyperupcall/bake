@@ -486,6 +486,13 @@ __bake_main() {
 		*=*)
 			IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
 
+			# If 'key=value' is passed, create global varaible $value_key
+			declare -g "var_$__bake_key"
+			local -n __bake_variable="var_$__bake_key"
+			__bake_variable="$__bake_value"
+
+			# If 'key=value' is passed, create global varaible $value
+			# This usage is DEPRECATED in favor if the 'var_' prefixed one
 			declare -g "$__bake_key"
 			local -n __bake_variable="$__bake_key"
 			__bake_variable="$__bake_value"
