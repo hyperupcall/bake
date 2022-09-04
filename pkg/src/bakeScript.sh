@@ -104,8 +104,13 @@ bake.has_flag() {
 		bake.die 'Failed to shift'
 	fi
 
+	local -a flags=("$@")
+	if ((${#flags[@]} == 0)); then
+		flags=("${__bake_args_userflags[@]}")
+	fi
+
 	local arg=
-	for arg; do
+	for arg in "${flags[@]}"; do
 		if [ "$arg" = "$flag_name" ]; then
 			return 0
 		fi
@@ -463,7 +468,6 @@ __bake_main() {
 	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
 	bake.cfg pedantic-task-cd 'off'
 
-	# Save argument list
 	declare -ga __bake_args_original=("$@")
 
 	# Parse arguments
@@ -504,6 +508,8 @@ __bake_main() {
 	if ! shift; then
 		__bake_internal_die 'Failed to shift'
 	fi
+
+	declare -ga __bake_args_userflags=("$@")
 
 	if ! cd "$BAKE_ROOT"; then
 		__bake_internal_die "Failed to cd"
@@ -557,7 +563,7 @@ __bake_main() {
 				init "$__bake_task"
 			fi
 
-			task."$__bake_task" "$@"
+			task."$__bake_task" "${__bake_args_userflags[@]}"
 
 			__bake_print_big "<- DONE"
 		fi
