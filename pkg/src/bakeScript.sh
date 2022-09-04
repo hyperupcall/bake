@@ -132,7 +132,7 @@ bake.cfg() {
 			yes) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg stacktrace' is deprecated. Instead, use either 'on' or 'off'"; __bake_cfg_stacktrace='on' ;;
 			no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg stacktrace' is deprecated. Instead, use either 'on' or 'off'"; __bake_cfg_stacktrace='off' ;;
 			on|off) __bake_cfg_stacktrace=$value ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
+			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
 	pedantic-task-cd)
@@ -141,18 +141,18 @@ bake.cfg() {
 			no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg pedantic-task-cd' is deprecated. Instead, use either 'on' or 'off'"; trap - 'DEBUG' ;;
 			on) trap '__bake_trap_debug' 'DEBUG' ;;
 			off) trap - 'DEBUG' ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
+			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
 	big-print)
 		case $value in
 			yes|no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg big-print' is deprecated. Instead, use either 'on' or 'off'" ;;
 			on|off) ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
+			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
 	*)
-		__bake_internal_die2 "No config property matched '$cfg'"
+		__bake_internal_bigdie "No config property matched '$cfg'"
 		;;
 	esac
 }
@@ -208,7 +208,17 @@ __bake_trap_debug() {
 __bake_is_color() {
 	local fd="1"
 
-	if [[ ${NO_COLOR+x} || "$TERM" = 'dumb' ]]; then
+	if [ ${NO_COLOR+x} ]; then
+		return 1
+	fi
+
+	if [[ $FORCE_COLOR == @(1|2|3) ]]; then
+		return 0
+	elif [[ $FORCE_COLOR == '0' ]]; then
+		return 1
+	fi
+
+	if [ "$TERM" = 'dumb' ]; then
 		return 1
 	fi
 
@@ -231,7 +241,7 @@ __bake_internal_die() {
 # doing so, it closes with "<- ERROR" big text
 # @arg $1 string Text to print
 # @internal
-__bake_internal_die2() {
+__bake_internal_bigdie() {
 	__bake_print_big '<- ERROR'
 
 	__bake_internal_error "$1. Exiting"
@@ -374,7 +384,7 @@ __bake_parse_args() {
 	unset REPLY; REPLY=
 	local -i total_shifts=0
 
-	local __bake_arg=
+	local arg=
 	for arg; do case $arg in
 	-f)
 		BAKE_FILE=$2
