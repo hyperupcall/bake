@@ -405,6 +405,10 @@ __bake_parse_args() {
 		;;
 	-w)
 		((total_shifts += 1))
+		if ! shift; then
+			__bake_internal_die 'Failed to shift'
+		fi
+
 		if [[ ! -v 'BAKE_INTERNAL_NO_WATCH_OVERRIDE' ]]; then
 			FLAG_WATCH='yes'
 		fi
