@@ -282,13 +282,15 @@ __bake_print_tasks() {
 		fi
 
 		if [[ $line =~ $regex ]]; then
-			str+="  -> ${BASH_REMATCH[2]}"
+			local matched_function_name="${BASH_REMATCH[2]}"
+			local matched_comment="${BASH_REMATCH[4]}"
 
-			local task_comment="${BASH_REMATCH[4]}"
-			if [[ -n "$task_comment" || -n "$annotation_doc" ]]; then
-				if [ -n "$task_comment" ]; then
-					__bake_internal_warn "Adjacent documentation comments are deprecated. Instead, write a comment above 'task.${BASH_REMATCH[2]}()' like so: '# doc: $task_comment'"
-					annotation_doc=$task_comment
+			str+="  -> $matched_function_name"
+
+			if [[ -n "$matched_comment" || -n "$annotation_doc" ]]; then
+				if [ -n "$matched_comment" ]; then
+					__bake_internal_warn "Adjacent documentation comments are deprecated. Instead, write a comment above 'task.$matched_function_name()' like so: '# doc: $matched_comment'"
+					annotation_doc=$matched_comment
 				fi
 
 				if __bake_is_color; then
