@@ -270,26 +270,36 @@ __bake_error() {
 # @description Nicely prints all 'Bakefile.sh' tasks to standard output
 # @internal
 __bake_print_tasks() {
-	printf '%s\n' 'Tasks:'
-	local str=
+	local str=$'Tasks:\n'
 
 	# shellcheck disable=SC1007,SC2034
 	local regex="^([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)[[:space:]]*\{[[:space:]]*(#[[:space:]]*(.*))?"
-	local line=
+	local line= annotation_doc=
 	while IFS= read -r line || [ -n "$line" ]; do
-		if [[ "$line" =~ $regex ]]; then
+		# doc
+		if [[ $line =~ ^[[:space:]]*#[[:space:]]doc:[[:space:]](.*?) ]]; then
+			annotation_doc=${BASH_REMATCH[1]}
+		fi
+
+		if [[ $line =~ $regex ]]; then
 			str+="  -> ${BASH_REMATCH[2]}"
 
-			local task_comment=${BASH_REMATCH[4]}
-			if [ -n "$task_comment" ]; then
+			local task_comment="${BASH_REMATCH[4]}"
+			if [[ -n "$task_comment" || -n "$annotation_doc" ]]; then
+				if [ -n "$task_comment" ]; then
+					__bake_internal_warn "Adjacent documentation comments are deprecated. Instead, write a comment above 'task.${BASH_REMATCH[2]}()' like so: '# doc: $task_comment'"
+					annotation_doc=$task_comment
+				fi
+
 				if __bake_is_color; then
-					str+=$' \033[3m'"($task_comment)"$'\033[0m'
+					str+=$' \033[3m'"($annotation_doc)"$'\033[0m'
 				else
-					str+=" ($task_comment)"
+					str+=" ($annotation_doc)"
 				fi
 			fi
 
 			str+=$'\n'
+			annotation_doc=
 		fi
 	done < "$BAKE_FILE"; unset -v line
 

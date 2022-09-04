@@ -4,11 +4,15 @@ task.test() {
 	bats tests
 }
 
-task.docs() { # build docs
+
+# doc: build docs
+# watch: -w
+task.docs() {
 	shdoc < './pkg/src/bakeScript.sh' > './docs/api.md'
 }
 
-task.release() { # release information
+# doc: release information
+task.release() {
 	local version="$1"
 	bake.assert_not_empty 'version'
 
