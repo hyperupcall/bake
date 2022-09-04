@@ -193,7 +193,7 @@ __bake_trap_debug() {
 
 	if [[ $current_function != "$__global_bake_trap_debug_current_function" \
 			&& $current_function == task.* ]]; then
-		if ! cd "$BAKE_ROOT"; then
+		if ! cd -- "$BAKE_ROOT"; then
 			__bake_internal_die "Failed to cd to \$BAKE_ROOT"
 		fi
 	fi
@@ -532,7 +532,7 @@ __bake_main() {
 
 	declare -ga __bake_args_userflags=("$@")
 
-	if ! cd "$BAKE_ROOT"; then
+	if ! cd -- "$BAKE_ROOT"; then
 		__bake_internal_die "Failed to cd"
 	fi
 
