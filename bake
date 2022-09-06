@@ -532,58 +532,58 @@ __bake_main() {
 
 	declare -ga __bake_args_userflags=("$@")
 
-	if ! cd -- "$BAKE_ROOT"; then
-		__bake_internal_die "Failed to cd"
-	fi
+	if [ "$FLAG_WATCH" = 'yes' ]; then
+		if ! command -v watchexec &>/dev/null; then
+			__bake_internal_die "Executable not found: 'watchexec'"
+		fi
 
-	# shellcheck disable=SC2097,SC1007,SC1090
-	__bake_task= source "$BAKE_FILE"
-
-	if declare -f task."$__bake_task" >/dev/null 2>&1; then
+		local -a watchexec_arguments=() tmp_arr=()
 		local line=
-		local should_test_next_line='no'
-		while IFS= read -r line; do
-			if [ "$should_test_next_line" = 'yes' ]; then
-				if [[ $line == *'bake.cfg'*big-print*@(no|off)* ]]; then
-					__bake_cfg_big_print='off'
+		while IFS= read -r line || [ -n "$line" ]; do
+			# watch
+			if [[ $line =~ ^[[:space:]]*#[[:space:]]watch:[[:space:]](.*?)$ ]]; then
+				readarray -td' ' tmp_arr <<< "${BASH_REMATCH[1]}"
+				tmp_arr[-1]=${tmp_arr[-1]::-1}
+			fi
+
+			# function
+			if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?(.*?)[[:space:]]*\(\)[[:space:]]*\{ ]]; then
+				local function_name="${BASH_REMATCH[2]}"
+
+				if [[ "$function_name" == task."$__bake_task" || "$function_name" == 'init' ]]; then
+					watchexec_arguments+=("${tmp_arr[@]}")
+				else
+					tmp_arr=()
 				fi
-				should_test_next_line='no'
 			fi
+		done < "$BAKE_FILE"; unset -v line
 
-			if [[ $line == @(task."$__bake_task"|init)*'('*')'*'{' ]]; then
-				should_test_next_line='yes'
-			fi
-		done < "$BAKE_FILE"; unset -v line should_test_next_line
+		# shellcheck disable=SC1007
+		BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${watchexec_arguments[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
+	else
+		if ! cd -- "$BAKE_ROOT"; then
+			__bake_internal_die "Failed to cd"
+		fi
 
-		if [ "$FLAG_WATCH" = 'yes' ]; then
-			if ! command -v watchexec &>/dev/null; then
-				__bake_internal_die "Executable not found: 'watchexec'"
-			fi
+		# shellcheck disable=SC2097,SC1007,SC1090
+		__bake_task= source "$BAKE_FILE"
 
-			local -a watchexec_arguments=() tmp_arr=()
+		if declare -f task."$__bake_task" >/dev/null 2>&1; then
+			local should_test_next_line='no'
 			local line=
-			while IFS= read -r line || [ -n "$line" ]; do
-				# watch
-				if [[ $line =~ ^[[:space:]]*#[[:space:]]watch:[[:space:]](.*?)$ ]]; then
-					readarray -td' ' tmp_arr <<< "${BASH_REMATCH[1]}"
-					tmp_arr[-1]=${tmp_arr[-1]::-1}
-				fi
-
-				# function
-				if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?(.*?)\(\)[[:space:]]*\{ ]]; then
-					local function_name="${BASH_REMATCH[2]}"
-
-					if [[ "$function_name" == task."$__bake_task" || "$function_name" == 'init' ]]; then
-						watchexec_arguments+=("${tmp_arr[@]}")
-					else
-						tmp_arr=()
+			while IFS= read -r line; do
+				if [ "$should_test_next_line" = 'yes' ]; then
+					if [[ $line == *'bake.cfg'*big-print*@(no|off)* ]]; then
+						__bake_cfg_big_print='off'
 					fi
+					should_test_next_line='no'
 				fi
-			done < "$BAKE_FILE"; unset -v line
 
-			# shellcheck disable=SC1007
-			BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${watchexec_arguments[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
-		else
+				if [[ $line == @(task."$__bake_task"|init)*'('*')'*'{' ]]; then
+					should_test_next_line='yes'
+				fi
+			done < "$BAKE_FILE"; unset -v line should_test_next_line
+
 			__bake_print_big "-> RUNNING TASK '$__bake_task'"
 
 			if declare -f init >/dev/null 2>&1; then
@@ -593,11 +593,11 @@ __bake_main() {
 			task."$__bake_task" "${__bake_args_userflags[@]}"
 
 			__bake_print_big "<- DONE"
+		else
+			__bake_internal_error "Task '$__bake_task' not found"
+			__bake_print_tasks
+			exit 1
 		fi
-	else
-		__bake_internal_error "Task '$__bake_task' not found"
-		__bake_print_tasks
-		exit 1
 	fi
 }
 
