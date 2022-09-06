@@ -7,7 +7,7 @@ init() {
 }
 
 # watch: --ignore **/docs/*
-# config: stacktrace=on pedantic-cd bigprint=off
+# config: big-print=off
 task.docs() {
 	shdoc < './pkg/src/bakeScript.sh' > './docs/api.md'
 }

@@ -625,21 +625,9 @@ __bake_main() {
 		__bake_task= source "$BAKE_FILE"
 
 		if declare -f task."$__bake_task" >/dev/null 2>&1; then
-			# todo: remove in v2
-			local should_test_next_line='no'
-			local line=
-			while IFS= read -r line; do
-				if [ "$should_test_next_line" = 'yes' ]; then
-					if [[ $line == *'bake.cfg'*big-print*@(no|off)* ]]; then
-						__bake_cfg_big_print='off'
-					fi
-					should_test_next_line='no'
-				fi
+			__bake_parse_config_comments "$__bake_task"
 
-				if [[ $line == @(task."$__bake_task"|init)*'('*')'*'{' ]]; then
-					should_test_next_line='yes'
-				fi
-			done < "$BAKE_FILE"; unset -v line should_test_next_line
+			__bake_cfg_big_print="${__bake_config_map[big-print]}"
 
 			__bake_print_big "-> RUNNING TASK '$__bake_task'"
 

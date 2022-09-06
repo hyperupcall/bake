@@ -14,7 +14,9 @@ Ensures that the `$PWD` will _always_ be correct when running a task. Nearly alw
 
 This isn't enabled by default since it traps `DEBUG` (and therefore feels messy)
 
-## `big-print`
+## `big-print` (REMOVED)
+
+This is only configurable in the comments.
 
 Big decorative lines are printed before and after execution of a task. This helps seeing which task is printed, but sometimes it can get in the way
 
