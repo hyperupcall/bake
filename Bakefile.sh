@@ -1,11 +1,16 @@
 # shellcheck shell=bash
 
+# watch: -c
+init() {
+	:
+}
+
 task.test() {
 	bats tests
 }
 
 # doc: build docs
-# watch: --ignore **/docs/* -c
+# watch: --ignore **/docs/*
 task.docs() {
 	shdoc < './pkg/src/bakeScript.sh' > './docs/api.md'
 }

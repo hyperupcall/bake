@@ -132,7 +132,7 @@ bake.cfg() {
 			yes) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg stacktrace' is deprecated. Instead, use either 'on' or 'off'"; __bake_cfg_stacktrace='on' ;;
 			no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg stacktrace' is deprecated. Instead, use either 'on' or 'off'"; __bake_cfg_stacktrace='off' ;;
 			on|off) __bake_cfg_stacktrace=$value ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
+			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
 	pedantic-task-cd)
@@ -141,18 +141,18 @@ bake.cfg() {
 			no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg pedantic-task-cd' is deprecated. Instead, use either 'on' or 'off'"; trap - 'DEBUG' ;;
 			on) trap '__bake_trap_debug' 'DEBUG' ;;
 			off) trap - 'DEBUG' ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
+			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
 	big-print)
 		case $value in
 			yes|no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg big-print' is deprecated. Instead, use either 'on' or 'off'" ;;
 			on|off) ;;
-			*) __bake_internal_die2 "Config property '$cfg' accepts only either 'on' or 'off'" ;;
+			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
 	*)
-		__bake_internal_die2 "No config property matched '$cfg'"
+		__bake_internal_bigdie "No config property matched '$cfg'"
 		;;
 	esac
 }
@@ -193,7 +193,7 @@ __bake_trap_debug() {
 
 	if [[ $current_function != "$__global_bake_trap_debug_current_function" \
 			&& $current_function == task.* ]]; then
-		if ! cd "$BAKE_ROOT"; then
+		if ! cd -- "$BAKE_ROOT"; then
 			__bake_internal_die "Failed to cd to \$BAKE_ROOT"
 		fi
 	fi
@@ -208,7 +208,17 @@ __bake_trap_debug() {
 __bake_is_color() {
 	local fd="1"
 
-	if [[ ${NO_COLOR+x} || "$TERM" = 'dumb' ]]; then
+	if [ ${NO_COLOR+x} ]; then
+		return 1
+	fi
+
+	if [[ $FORCE_COLOR == @(1|2|3) ]]; then
+		return 0
+	elif [[ $FORCE_COLOR == '0' ]]; then
+		return 1
+	fi
+
+	if [ "$TERM" = 'dumb' ]; then
 		return 1
 	fi
 
@@ -231,7 +241,7 @@ __bake_internal_die() {
 # doing so, it closes with "<- ERROR" big text
 # @arg $1 string Text to print
 # @internal
-__bake_internal_die2() {
+__bake_internal_bigdie() {
 	__bake_print_big '<- ERROR'
 
 	__bake_internal_error "$1. Exiting"
@@ -374,7 +384,7 @@ __bake_parse_args() {
 	unset REPLY; REPLY=
 	local -i total_shifts=0
 
-	local __bake_arg=
+	local arg=
 	for arg; do case $arg in
 	-f)
 		BAKE_FILE=$2
@@ -395,6 +405,10 @@ __bake_parse_args() {
 		;;
 	-w)
 		((total_shifts += 1))
+		if ! shift; then
+			__bake_internal_die 'Failed to shift'
+		fi
+
 		if [[ ! -v 'BAKE_INTERNAL_NO_WATCH_OVERRIDE' ]]; then
 			FLAG_WATCH='yes'
 		fi
@@ -518,7 +532,7 @@ __bake_main() {
 
 	declare -ga __bake_args_userflags=("$@")
 
-	if ! cd "$BAKE_ROOT"; then
+	if ! cd -- "$BAKE_ROOT"; then
 		__bake_internal_die "Failed to cd"
 	fi
 
@@ -546,23 +560,29 @@ __bake_main() {
 				__bake_internal_die "Executable not found: 'watchexec'"
 			fi
 
-			local -a annotation_watch=()
+			local -a watchexec_arguments=() tmp_arr=()
 			local line=
 			while IFS= read -r line || [ -n "$line" ]; do
-				# function
-				if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?task\."$__bake_task"\(\)[[:space:]]*\{ ]]; then
-					break
-				fi
-
 				# watch
 				if [[ $line =~ ^[[:space:]]*#[[:space:]]watch:[[:space:]](.*?)$ ]]; then
-					readarray -td' ' annotation_watch <<< "${BASH_REMATCH[1]}"
-					annotation_watch[-1]=${annotation_watch[-1]::-1}
+					readarray -td' ' tmp_arr <<< "${BASH_REMATCH[1]}"
+					tmp_arr[-1]=${tmp_arr[-1]::-1}
+				fi
+
+				# function
+				if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?(.*?)\(\)[[:space:]]*\{ ]]; then
+					local function_name="${BASH_REMATCH[2]}"
+
+					if [[ "$function_name" == task."$__bake_task" || "$function_name" == 'init' ]]; then
+						watchexec_arguments+=("${tmp_arr[@]}")
+					else
+						tmp_arr=()
+					fi
 				fi
 			done < "$BAKE_FILE"; unset -v line
 
 			# shellcheck disable=SC1007
-			BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${annotation_watch[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
+			BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${watchexec_arguments[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
 		else
 			__bake_print_big "-> RUNNING TASK '$__bake_task'"
 

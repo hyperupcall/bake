@@ -560,23 +560,29 @@ __bake_main() {
 				__bake_internal_die "Executable not found: 'watchexec'"
 			fi
 
-			local -a annotation_watch=()
+			local -a watchexec_arguments=() tmp_arr=()
 			local line=
 			while IFS= read -r line || [ -n "$line" ]; do
-				# function
-				if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?task\."$__bake_task"\(\)[[:space:]]*\{ ]]; then
-					break
-				fi
-
 				# watch
 				if [[ $line =~ ^[[:space:]]*#[[:space:]]watch:[[:space:]](.*?)$ ]]; then
-					readarray -td' ' annotation_watch <<< "${BASH_REMATCH[1]}"
-					annotation_watch[-1]=${annotation_watch[-1]::-1}
+					readarray -td' ' tmp_arr <<< "${BASH_REMATCH[1]}"
+					tmp_arr[-1]=${tmp_arr[-1]::-1}
+				fi
+
+				# function
+				if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?(.*?)\(\)[[:space:]]*\{ ]]; then
+					local function_name="${BASH_REMATCH[2]}"
+
+					if [[ "$function_name" == task."$__bake_task" || "$function_name" == 'init' ]]; then
+						watchexec_arguments+=("${tmp_arr[@]}")
+					else
+						tmp_arr=()
+					fi
 				fi
 			done < "$BAKE_FILE"; unset -v line
 
 			# shellcheck disable=SC1007
-			BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${annotation_watch[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
+			BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${watchexec_arguments[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
 		else
 			__bake_print_big "-> RUNNING TASK '$__bake_task'"
 
