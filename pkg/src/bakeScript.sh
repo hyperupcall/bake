@@ -56,6 +56,7 @@ bake.info() {
 	fi
 }
 
+# breaking: remove in v2
 # @description Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
 # @arg $@ string Names of variables to check for emptiness
 # @see bake.assert_not_empty
@@ -126,6 +127,7 @@ bake.cfg() {
 	local cfg="$1"
 	local value="$2"
 
+	# breaking: remove in v2
 	case $cfg in
 	stacktrace)
 		case $value in
@@ -430,6 +432,7 @@ __bake_print_big() {
 		if stty size &>/dev/null; then
 			stty size
 		else
+			# Only columns is used by Bake, so '20  was chosen arbitrarily
 			if [ -n "$COLUMNS" ]; then
 				printf '%s\n' "20 $COLUMNS"
 			else
@@ -500,7 +503,7 @@ __bake_parse_args() {
 	*)
 		break
 		;;
-	esac done
+	esac done; unset -v arg
 
 	if [ -n "$BAKE_FILE" ]; then
 		BAKE_ROOT=$(
@@ -567,21 +570,20 @@ __bake_main() {
 
 	# Set variables à la Make
 	# shellcheck disable=SC1007
-	local __bake_key= __bake_value=
-	local __bake_arg=1
+	local __bake_key= __bake_value= __bake_arg=
 	for __bake_arg; do case $__bake_arg in
 		*=*)
 			IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
 
+			# breaking: remove in v2
+			# If 'key=value' is passed, create global varaible $value
+			declare -g "$__bake_key"
+			local -n __bake_variable="$__bake_key"
+			__bake_variable="$__bake_value"
+
 			# If 'key=value' is passed, create global varaible $value_key
 			declare -g "var_$__bake_key"
 			local -n __bake_variable="var_$__bake_key"
-			__bake_variable="$__bake_value"
-
-			# If 'key=value' is passed, create global varaible $value
-			# This usage is DEPRECATED in favor if the 'var_' prefixed one
-			declare -g "$__bake_key"
-			local -n __bake_variable="$__bake_key"
 			__bake_variable="$__bake_value"
 
 			if ! shift; then
@@ -623,6 +625,7 @@ __bake_main() {
 		__bake_task= source "$BAKE_FILE"
 
 		if declare -f task."$__bake_task" >/dev/null 2>&1; then
+			# breaking: remove in v2
 			local should_test_next_line='no'
 			local line=
 			while IFS= read -r line; do
