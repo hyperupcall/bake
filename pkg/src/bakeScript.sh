@@ -362,8 +362,6 @@ __bake_parse_task_comments() {
 __bake_print_tasks() {
 	local str=$'Tasks:\n'
 
-	__bake_parse_task_comments
-
 	local -a task_flags=()
 	# shellcheck disable=SC1007
 	local line= task_docstring=
@@ -629,7 +627,9 @@ __bake_main() {
 		if declare -f task."$__bake_task" >/dev/null 2>&1; then
 			__bake_parse_task_comments "$__bake_task"
 
-			__bake_cfg_big_print="${__bake_config_map[big-print]}"
+			bake.cfg stacktrace "${__bake_config_map[stacktrace]}"
+			bake.cfg big-print "${__bake_config_map[big-print]}"
+			bake.cfg pedantic-task-cd "${__bake_config_map[pedantic-cd]}"
 
 			__bake_print_big "-> RUNNING TASK '$__bake_task'"
 
