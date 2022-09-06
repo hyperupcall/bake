@@ -490,7 +490,7 @@ __bake_parse_args() {
 		fi
 		;;
 	-v)
-		local bake_version='1.9.0'
+		local bake_version='1.10.0'
 		printf '%s\n' "Version: $bake_version"
 		exit 0
 		;;
