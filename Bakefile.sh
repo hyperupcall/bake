@@ -1,16 +1,13 @@
 # shellcheck shell=bash
 
+# doc: build docs
 # watch: -c
 init() {
 	:
 }
 
-task.test() {
-	bats tests
-}
-
-# doc: build docs
 # watch: --ignore **/docs/*
+# config: stacktrace=on pedantic-cd bigprint=off
 task.docs() {
 	shdoc < './pkg/src/bakeScript.sh' > './docs/api.md'
 }

@@ -282,6 +282,79 @@ __bake_error() {
 	fi
 } >&2
 
+# @description Parses the configuration for functions embeded in comments. This properly
+# parses inherited config from the 'init' function
+# @set string __bake_config_docstring
+# @set string __bake_config_watchexec_args
+# @set string __bake_config_map
+# @internal
+__bake_parse_config_comments() {
+	local task_name="$1"
+
+	declare -g __bake_config_docstring=
+	declare -ga __bake_config_watchexec_args=()
+	declare -gA __bake_config_map=()
+
+	local tmp_docstring=
+	local -a tmp_watch_args=()
+	local -A tmp_cfg_map=()
+	local line=
+	while IFS= read -r line || [ -n "$line" ]; do
+		if [[ $line =~ ^[[:space:]]*#[[:space:]](doc|watch|config):[[:space:]]*(.*?)$ ]]; then
+			local comment_category="${BASH_REMATCH[1]}"
+			local comment_content="${BASH_REMATCH[2]}"
+
+			if [ "$comment_category" = 'doc' ]; then
+				tmp_docstring=$comment_content
+			elif [ "$comment_category" = 'watch' ]; then
+				readarray -td' ' tmp_watch_args <<< "$comment_content"
+				tmp_watch_args[-1]=${tmp_watch_args[-1]::-1}
+			elif [ "$comment_category" = 'config' ]; then
+				local -a pairs=()
+				readarray -td' ' pairs <<< "$comment_content"
+				pairs[-1]=${pairs[-1]::-1}
+
+				# shellcheck disable=SC1007
+				local pair= key= value=
+				for pair in "${pairs[@]}"; do
+					IFS='=' read -r key value <<< "$pair"
+
+					tmp_cfg_map[$key]=${value:-on}
+				done; unset -v pair
+			fi
+		fi
+
+		# function()
+		if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?(.*?)[[:space:]]*\(\)[[:space:]]*\{ ]]; then
+			local function_name="${BASH_REMATCH[2]}"
+
+			if [ "$function_name" == task."$task_name" ]; then
+				__bake_config_docstring=$tmp_docstring
+
+				__bake_config_watchexec_args+=("${tmp_watch_args[@]}")
+
+				local key=
+				for key in "${!tmp_cfg_map[@]}"; do
+					__bake_config_map["$key"]="${tmp_cfg_map[$key]}"
+				done; unset -v key
+
+				break
+			elif [ "$function_name" == 'init' ]; then
+				__bake_config_watchexec_args+=("${tmp_watch_args[@]}")
+
+				local key=
+				for key in "${!tmp_cfg_map[@]}"; do
+					__bake_config_map["$key"]="${tmp_cfg_map[$key]}"
+				done; unset -v key
+			fi
+
+			tmp_docstring=
+			tmp_watch_args=()
+			tmp_cfg_map=()
+		fi
+	done < "$BAKE_FILE"; unset -v line
+}
+
 # @description Nicely prints all 'Bakefile.sh' tasks to standard output
 # @internal
 __bake_print_tasks() {
@@ -537,29 +610,10 @@ __bake_main() {
 			__bake_internal_die "Executable not found: 'watchexec'"
 		fi
 
-		local -a watchexec_arguments=() tmp_arr=()
-		local line=
-		while IFS= read -r line || [ -n "$line" ]; do
-			# watch
-			if [[ $line =~ ^[[:space:]]*#[[:space:]]watch:[[:space:]](.*?)$ ]]; then
-				readarray -td' ' tmp_arr <<< "${BASH_REMATCH[1]}"
-				tmp_arr[-1]=${tmp_arr[-1]::-1}
-			fi
-
-			# function
-			if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?(.*?)[[:space:]]*\(\)[[:space:]]*\{ ]]; then
-				local function_name="${BASH_REMATCH[2]}"
-
-				if [[ "$function_name" == task."$__bake_task" || "$function_name" == 'init' ]]; then
-					watchexec_arguments+=("${tmp_arr[@]}")
-				else
-					tmp_arr=()
-				fi
-			fi
-		done < "$BAKE_FILE"; unset -v line
+		__bake_parse_config_comments "$__bake_task"
 
 		# shellcheck disable=SC1007
-		BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${watchexec_arguments[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
+		BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${__bake_config_watchexec_args[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
 	else
 		if ! cd -- "$BAKE_ROOT"; then
 			__bake_internal_die "Failed to cd"
