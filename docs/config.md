@@ -8,12 +8,6 @@ Prints a stacktrace when a task fails.
 
 This isn't enabled by default since the failed task is rarely an issue with Bake, but the underlying command line tool it executes. Disabling it by defualt prevents unecessary clogging of the terminal
 
-## `pedantic-task-cd`
-
-Ensures that the `$PWD` will _always_ be correct when running a task. Nearly always it is, with the only exception occuring for the case where a directory is changed within a task, and another task is manually ran
-
-This isn't enabled by default since it traps `DEBUG` (and therefore feels messy)
-
 ## `big-print` (REMOVED)
 
 This is only configurable in the comments.
@@ -34,3 +28,9 @@ task.test() {
 ```
 
 This is enabled by default
+
+## `pedantic-task-cd`
+
+Ensures that the `$PWD` will _always_ be correct when running a task. Nearly always it is, with the only exception occuring for the case where a directory is changed within a task, and another task is manually ran
+
+This isn't enabled by default since it traps `DEBUG` (and therefore feels messy)

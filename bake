@@ -56,7 +56,7 @@ bake.info() {
 	fi
 }
 
-# todo: remove in v2
+# breaking: remove in v2
 # @description Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
 # @arg $@ string Names of variables to check for emptiness
 # @see bake.assert_not_empty
@@ -127,7 +127,7 @@ bake.cfg() {
 	local cfg="$1"
 	local value="$2"
 
-	# todo: remove in v2
+	# breaking: remove in v2
 	case $cfg in
 	stacktrace)
 		case $value in
@@ -287,10 +287,10 @@ __bake_error() {
 # @description Parses the configuration for functions embeded in comments. This properly
 # parses inherited config from the 'init' function
 # @set string __bake_config_docstring
-# @set string __bake_config_watchexec_args
-# @set string __bake_config_map
+# @set array __bake_config_watchexec_args
+# @set object __bake_config_map
 # @internal
-__bake_parse_config_comments() {
+__bake_parse_task_comments() {
 	local task_name="$1"
 
 	declare -g __bake_config_docstring=
@@ -337,7 +337,7 @@ __bake_parse_config_comments() {
 
 				local key=
 				for key in "${!tmp_cfg_map[@]}"; do
-					__bake_config_map["$key"]="${tmp_cfg_map[$key]}"
+					__bake_config_map[$key]=${tmp_cfg_map[$key]}
 				done; unset -v key
 
 				break
@@ -346,7 +346,7 @@ __bake_parse_config_comments() {
 
 				local key=
 				for key in "${!tmp_cfg_map[@]}"; do
-					__bake_config_map["$key"]="${tmp_cfg_map[$key]}"
+					__bake_config_map[$key]=${tmp_cfg_map[$key]}
 				done; unset -v key
 			fi
 
@@ -361,6 +361,8 @@ __bake_parse_config_comments() {
 # @internal
 __bake_print_tasks() {
 	local str=$'Tasks:\n'
+
+	__bake_parse_task_comments
 
 	local -a task_flags=()
 	# shellcheck disable=SC1007
@@ -432,7 +434,7 @@ __bake_print_big() {
 		if stty size &>/dev/null; then
 			stty size
 		else
-			# Only columns is used by Bake, so '20 rows' was chosen arbitrarily
+			# Only columns is used by Bake, so '20  was chosen arbitrarily
 			if [ -n "$COLUMNS" ]; then
 				printf '%s\n' "20 $COLUMNS"
 			else
@@ -575,7 +577,7 @@ __bake_main() {
 		*=*)
 			IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
 
-			# todo: remove in v2
+			# breaking: remove in v2
 			# If 'key=value' is passed, create global varaible $value
 			declare -g "$__bake_key"
 			local -n __bake_variable="$__bake_key"
@@ -612,7 +614,7 @@ __bake_main() {
 			__bake_internal_die "Executable not found: 'watchexec'"
 		fi
 
-		__bake_parse_config_comments "$__bake_task"
+		__bake_parse_task_comments "$__bake_task"
 
 		# shellcheck disable=SC1007
 		BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${__bake_config_watchexec_args[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
@@ -625,7 +627,7 @@ __bake_main() {
 		__bake_task= source "$BAKE_FILE"
 
 		if declare -f task."$__bake_task" >/dev/null 2>&1; then
-			__bake_parse_config_comments "$__bake_task"
+			__bake_parse_task_comments "$__bake_task"
 
 			__bake_cfg_big_print="${__bake_config_map[big-print]}"
 

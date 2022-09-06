@@ -137,19 +137,19 @@ bake.cfg() {
 			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
+	big-print)
+		case $value in
+			yes|no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg big-print' is deprecated. Instead, use either 'on' or 'off'" ;;
+			on|off) ;;
+			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
+		esac
+		;;
 	pedantic-task-cd)
 		case $value in
 			yes) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg pedantic-task-cd' is deprecated. Instead, use either 'on' or 'off'"; trap '__bake_trap_debug' 'DEBUG' ;;
 			no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg pedantic-task-cd' is deprecated. Instead, use either 'on' or 'off'"; trap - 'DEBUG' ;;
 			on) trap '__bake_trap_debug' 'DEBUG' ;;
 			off) trap - 'DEBUG' ;;
-			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
-		esac
-		;;
-	big-print)
-		case $value in
-			yes|no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg big-print' is deprecated. Instead, use either 'on' or 'off'" ;;
-			on|off) ;;
 			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
@@ -287,10 +287,10 @@ __bake_error() {
 # @description Parses the configuration for functions embeded in comments. This properly
 # parses inherited config from the 'init' function
 # @set string __bake_config_docstring
-# @set string __bake_config_watchexec_args
-# @set string __bake_config_map
+# @set array __bake_config_watchexec_args
+# @set object __bake_config_map
 # @internal
-__bake_parse_config_comments() {
+__bake_parse_task_comments() {
 	local task_name="$1"
 
 	declare -g __bake_config_docstring=
@@ -337,7 +337,7 @@ __bake_parse_config_comments() {
 
 				local key=
 				for key in "${!tmp_cfg_map[@]}"; do
-					__bake_config_map["$key"]="${tmp_cfg_map[$key]}"
+					__bake_config_map[$key]=${tmp_cfg_map[$key]}
 				done; unset -v key
 
 				break
@@ -346,7 +346,7 @@ __bake_parse_config_comments() {
 
 				local key=
 				for key in "${!tmp_cfg_map[@]}"; do
-					__bake_config_map["$key"]="${tmp_cfg_map[$key]}"
+					__bake_config_map[$key]=${tmp_cfg_map[$key]}
 				done; unset -v key
 			fi
 
@@ -361,6 +361,8 @@ __bake_parse_config_comments() {
 # @internal
 __bake_print_tasks() {
 	local str=$'Tasks:\n'
+
+	__bake_parse_task_comments
 
 	local -a task_flags=()
 	# shellcheck disable=SC1007
@@ -545,8 +547,9 @@ __bake_parse_args() {
 # @description Main function
 # @internal
 __bake_main() {
-	__bake_cfg_stacktrace='off'
-	__bake_cfg_big_print='on'
+	bake.cfg stacktrace 'off'
+	bake.cfg big-print 'on'
+	bake.cfg pedantic-task-cd 'off'
 
 	# Environment and configuration boilerplate
 	set -ETeo pipefail
@@ -556,7 +559,6 @@ __bake_main() {
 		LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
 	trap '__bake_trap_err' 'ERR'
 	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
-	bake.cfg pedantic-task-cd 'off'
 
 	declare -ga __bake_args_original=("$@")
 
@@ -612,7 +614,7 @@ __bake_main() {
 			__bake_internal_die "Executable not found: 'watchexec'"
 		fi
 
-		__bake_parse_config_comments "$__bake_task"
+		__bake_parse_task_comments "$__bake_task"
 
 		# shellcheck disable=SC1007
 		BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${__bake_config_watchexec_args[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
@@ -625,7 +627,7 @@ __bake_main() {
 		__bake_task= source "$BAKE_FILE"
 
 		if declare -f task."$__bake_task" >/dev/null 2>&1; then
-			__bake_parse_config_comments "$__bake_task"
+			__bake_parse_task_comments "$__bake_task"
 
 			__bake_cfg_big_print="${__bake_config_map[big-print]}"
 
