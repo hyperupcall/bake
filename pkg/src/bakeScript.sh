@@ -295,7 +295,11 @@ __bake_parse_task_comments() {
 
 	declare -g __bake_config_docstring=
 	declare -ga __bake_config_watchexec_args=()
-	declare -gA __bake_config_map=()
+	declare -gA __bake_config_map=(
+		[stacktrace]='off'
+		[big-print]='on'
+		[pedantic-cd]='off'
+	)
 
 	local tmp_docstring=
 	local -a tmp_watch_args=()
@@ -457,7 +461,7 @@ __bake_print_big() {
 # @set REPLY Number of times to shift
 # @internal
 __bake_parse_args() {
-	unset REPLY; REPLY=
+	unset -v REPLY; REPLY=
 	local -i total_shifts=0
 
 	local arg=
