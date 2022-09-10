@@ -1,6 +1,8 @@
 # shellcheck shell=bash
 
 main.bake() {
+	local bake_version='1.10.0'
+
 	local bake_script="$BASALT_PACKAGE_DIR/pkg/src/bakeScript.sh"
 
 	# shellcheck disable=SC1090
@@ -19,7 +21,10 @@ main.bake() {
 
 	if ! chmod +x "$BAKE_ROOT/bake"; then
 		__bake_internal_die "Failed to 'chmod +x' bake script" >&2
-		exit 1
+	fi
+
+	if [ "$__global_bake_version" != "$bake_version" ]; then
+		__bake_internal_warn "Updating from version $__global_bake_version to $bake_version"
 	fi
 
 	exec "$BAKE_ROOT/bake" "$@"

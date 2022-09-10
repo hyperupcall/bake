@@ -15,6 +15,8 @@
 #
 # Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 
+__global_bake_version='1.10.0'
+
 if [ "$0" != "${BASH_SOURCE[0]}" ] && [ "$BAKE_INTERNAL_CAN_SOURCE" != 'yes' ]; then
 	printf '%s\n' 'Error: This file should not be sourced' >&2
 	return 1
@@ -494,8 +496,7 @@ __bake_parse_args() {
 		fi
 		;;
 	-v)
-		local bake_version='1.10.0'
-		printf '%s\n' "Version: $bake_version"
+		printf '%s\n' "Version: $__global_bake_version"
 		exit 0
 		;;
 	-h)
