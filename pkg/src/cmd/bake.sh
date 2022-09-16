@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 
 main.bake() {
-	local bake_version='1.10.0'
+	local bake_version='1.10.1'
 
 	local bake_script="$BASALT_PACKAGE_DIR/pkg/src/bakeScript.sh"
 
