@@ -31,7 +31,7 @@ bake.die() {
 	else
 		__bake_error 'Exiting'
 	fi
-	__bake_print_big '<- ERROR'
+	__bake_print_big --show-time '<- ERROR'
 
 	__bake_print_stacktrace
 
@@ -184,7 +184,7 @@ __bake_print_stacktrace() {
 __bake_trap_err() {
 	local error_code=$?
 
-	__bake_print_big "<- ERROR"
+	__bake_print_big --show-time "<- ERROR"
 	__bake_internal_error "Your Bakefile did not exit successfully (exit code $error_code)"
 	__bake_print_stacktrace
 
@@ -285,6 +285,43 @@ __bake_error() {
 		printf '%s: %s\n' 'Error' "$1"
 	fi
 } >&2
+
+# @description Prepares internal variables for time setting
+# @internal
+__bake_time_prepare() {
+	if ((${BASH_VERSINFO[0]} >= 5)); then
+		__bake_global_timestart=$EPOCHREALTIME
+		__bake_global_timestart=${__bake_global_timestart%.*}
+	fi
+}
+
+__bake_time_get_total_pretty() {
+	unset -v REPLY; REPLY=
+
+	if ((${BASH_VERSINFO[0]} >= 5)); then
+		local timeend=$EPOCHREALTIME
+		timeend=${timeend%.*}
+
+		local timediff=$((timeend - __bake_global_timestart))
+		if ((timediff < 1)); then
+			return
+		fi
+
+		local seconds=$((timediff % 60))
+		local minutes=$((timediff / 60 % 60))
+		local hours=$((timediff / 3600 % 60))
+
+		REPLY="${seconds}s"
+
+		if ((minutes > 0)); then
+			REPLY="${minutes}m $REPLY"
+		fi
+
+		if ((hours > 0)); then
+			REPLY="${hours}h $REPLY"
+		fi
+	fi
+}
 
 # @description Parses the configuration for functions embeded in comments. This properly
 # parses inherited config from the 'init' function
@@ -418,11 +455,20 @@ __bake_print_tasks() {
 # @arg $1 string Text to print
 # @internal
 __bake_print_big() {
-	local print_text="$1"
-
 	if [ "${__bake_config_map[big-print]}" = 'off' ]; then
 		return
 	fi
+
+	if [ "$1" = '--show-time' ]; then
+		local flag_show_time='yes'
+		local print_text="$2"
+	else
+		local flag_show_time='no'
+		local print_text="$1"
+	fi
+
+	__bake_time_get_total_pretty
+	local time_str=" (time: $REPLY) "
 
 	# shellcheck disable=SC1007
 	local _stty_height= _stty_width=
@@ -443,6 +489,9 @@ __bake_print_big() {
 	# shellcheck disable=SC2183
 	printf -v separator_text '%*s' $((_stty_width - ${#print_text} - 1))
 	printf -v separator_text '%s' "${separator_text// /=}"
+	if [[ "$flag_show_time" == 'yes' && -n "$time_str" ]]; then
+		separator_text="${separator_text::5}${time_str}${separator_text:5+${#time_str}:${#separator_text}}"
+	fi
 	if __bake_is_color; then
 		printf '\033[1m%s %s\033[0m\n' "$print_text" "$separator_text"
 	else
@@ -640,9 +689,11 @@ __bake_main() {
 				init "$__bake_task"
 			fi
 
+			__bake_time_prepare
+
 			task."$__bake_task" "${__bake_args_userflags[@]}"
 
-			__bake_print_big "<- DONE"
+			__bake_print_big --show-time "<- DONE"
 		else
 			__bake_internal_error "Task '$__bake_task' not found"
 			__bake_print_tasks
