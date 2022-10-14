@@ -88,8 +88,8 @@ To sum it up, _it just works_
 - Pass `-f` to manually specify Bakefile
 - Dead-simple, miniscule function API (see [api.md](./docs/api.md) for details)
 - Use `init()` function to run code before any task execution
-- Built in support for [watchexec](https://github.com/watchexec/watchexec)
-- Annotate task with description (or custom watch flags) using a comment
+- Built-in support for [watchexec](https://github.com/watchexec/watchexec)
+- Annotate task with description (or custom watch flags) using comments
 
 ## Installation
 
