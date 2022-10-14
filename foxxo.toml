@@ -1,7 +1,7 @@
 [project]
 ecosystem = 'basalt'
 form = 'app'
-for = 'anyone'
+for = 'me'
 status = 'experimental'
 
 [discovery]
