@@ -290,6 +290,30 @@ __bake_error() {
 	fi
 } >&2
 
+
+# @description Tests if the './bake' file should be replaced. It should only
+# be replaced if we're not in an interactive Git context
+# @internal
+__bake_should_replace_bakescript() {
+	local dir="$BAKE_ROOT"
+	while [ ! -d "$dir/.git" ] && [[ -n "$dir" ]]; do
+		dir=${dir%/*}
+	done
+
+	if [ -d "$dir/.git" ]; then
+		# ref: https://github.com/git/git/blob/d420dda0576340909c3faff364cfbd1485f70376/wt-status.c#L1749
+		# ref2: https://github.com/Byron/gitoxide/blob/375051fa97d79f95fa7179b536e616c4aefd88e2/git-repository/src/repository/state.rs#L8
+		local file=
+		for file in {rebase-apply/applying,rebase-apply/rebasing,rebase-apply,rebase-merge/interactive,rebase-merge,CHERRY_PICK_HEAD,MERGE_HEAD,BISECT_LOG,REVERT_HEAD}; do
+			if [ -f "$dir/.git/$file" ]; then
+				return 1
+			fi
+		done; unset -v file
+	fi
+
+	return 0
+}
+
 # @description Prepares internal variables for time setting
 # @internal
 __bake_time_prepare() {
