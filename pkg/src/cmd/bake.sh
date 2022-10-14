@@ -24,7 +24,7 @@ __bake_just_in_case_trap_debug() {
 	local current_function="${FUNCNAME[1]}"
 
 	if [ "$current_function" = '__bake_main' ]; then
-		local version_old=$__global_bake_version
+		local version_old="$__global_bake_version"
 
 		trap - DEBUG
 		unset -v BAKE_INTERNAL_ONLY_VERSION
