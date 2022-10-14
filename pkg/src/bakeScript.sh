@@ -17,6 +17,7 @@
 
 __global_bake_version='1.10.1'
 if [ "$BAKE_INTERNAL_ONLY_VERSION" = 'yes' ]; then
+	# shellcheck disable=SC2034
 	BAKE_INTERNAL_ONLY_VERSION_SUCCESS='yes'
 	return 0
 fi
@@ -145,8 +146,7 @@ bake.cfg() {
 		;;
 	big-print)
 		case $value in
-			yes|no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg big-print' is deprecated. Instead, use either 'on' or 'off'" ;;
-			on|off) ;;
+			yes|no|on|off) __bake_internal_warn "Passing any once-valid value to 'bake.cfg big-print' is deprecated. Instead, use function comments" ;;
 			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
 		;;
@@ -188,7 +188,7 @@ __bake_print_stacktrace() {
 __bake_trap_err() {
 	local error_code=$?
 
-	__bake_print_big --show-time "<- ERROR"
+	__bake_print_big --show-time '<- ERROR'
 	__bake_internal_error "Your Bakefile did not exit successfully (exit code $error_code)"
 	__bake_print_stacktrace
 
@@ -293,15 +293,18 @@ __bake_error() {
 # @description Prepares internal variables for time setting
 # @internal
 __bake_time_prepare() {
-	if ((${BASH_VERSINFO[0]} >= 5)); then
+	if ((BASH_VERSINFO[0] >= 5)); then
 		__bake_global_timestart=$EPOCHSECONDS
 	fi
 }
 
+# @description Determines total approximate execution time of a task
+# @set string REPLY
+# @internal
 __bake_time_get_total_pretty() {
 	unset -v REPLY; REPLY=
 
-	if ((${BASH_VERSINFO[0]} >= 5)); then
+	if ((BASH_VERSINFO[0] >= 5)); then
 		local timediff=$((EPOCHSECONDS - __bake_global_timestart))
 		if ((timediff < 1)); then
 			return
@@ -512,7 +515,7 @@ __bake_parse_args() {
 	-f)
 		BAKE_FILE=$2
 		if [ -z "$BAKE_FILE" ]; then
-			__bake_internal_die "A value was not specified for for flag '-f"
+			__bake_internal_die "A value was not specified for for flag '-f'"
 		fi
 		((total_shifts += 2))
 		if ! shift 2; then
@@ -533,7 +536,7 @@ __bake_parse_args() {
 		fi
 
 		if [[ ! -v 'BAKE_INTERNAL_NO_WATCH_OVERRIDE' ]]; then
-			FLAG_WATCH='yes'
+			BAKE_FLAG_WATCH='yes'
 		fi
 		;;
 	-v)
@@ -603,8 +606,8 @@ __bake_main() {
 	declare -ga __bake_args_original=("$@")
 
 	# Parse arguments
-	# Set `BAKE_{ROOT,FILE}`
-	BAKE_ROOT=; BAKE_FILE=; FLAG_WATCH=
+	# Set `BAKE_{ROOT,FILE,FLAG_WATCH}`
+	BAKE_ROOT=; BAKE_FILE=; BAKE_FLAG_WATCH=
 	__bake_parse_args "$@"
 	if ! shift $REPLY; then
 		__bake_internal_die 'Failed to shift'
@@ -617,13 +620,12 @@ __bake_main() {
 	*=*)
 		IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
 
-		# breaking: remove in v2
-		# If 'key=value' is passed, create global varaible $value
+		# If 'key=value' is passed, create global variable $value
 		declare -g "$__bake_key"
 		local -n __bake_variable="$__bake_key"
 		__bake_variable="$__bake_value"
 
-		# If 'key=value' is passed, create global varaible $value_key
+		# If 'key=value' is passed, create global variable $value_key
 		declare -g "var_$__bake_key"
 		local -n __bake_variable="var_$__bake_key"
 		__bake_variable="$__bake_value"
@@ -659,7 +661,7 @@ __bake_main() {
 		[pedantic-cd]='off'
 	)
 
-	if [ "$FLAG_WATCH" = 'yes' ]; then
+	if [ "$BAKE_FLAG_WATCH" = 'yes' ]; then
 		if ! command -v watchexec &>/dev/null; then
 			__bake_internal_die "Executable not found: 'watchexec'"
 		fi
@@ -678,10 +680,6 @@ __bake_main() {
 
 		if declare -f task."$__bake_task" >/dev/null 2>&1; then
 			__bake_parse_task_comments "$__bake_task"
-
-			bake.cfg stacktrace "${__bake_config_map[stacktrace]}"
-			bake.cfg big-print "${__bake_config_map[big-print]}"
-			bake.cfg pedantic-task-cd "${__bake_config_map[pedantic-cd]}"
 
 			__bake_print_big "-> RUNNING TASK '$__bake_task'"
 
