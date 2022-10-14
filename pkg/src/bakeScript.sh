@@ -428,7 +428,7 @@ __bake_print_tasks() {
 __bake_print_big() {
 	local print_text="$1"
 
-	if [ "$__bake_cfg_big_print" = 'off' ]; then
+	if [ "${__bake_config_map[big-print]}" = 'off' ]; then
 		return
 	fi
 
