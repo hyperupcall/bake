@@ -290,8 +290,7 @@ __bake_error() {
 # @internal
 __bake_time_prepare() {
 	if ((${BASH_VERSINFO[0]} >= 5)); then
-		__bake_global_timestart=$EPOCHREALTIME
-		__bake_global_timestart=${__bake_global_timestart%.*}
+		__bake_global_timestart=$EPOCHSECONDS
 	fi
 }
 
@@ -299,10 +298,7 @@ __bake_time_get_total_pretty() {
 	unset -v REPLY; REPLY=
 
 	if ((${BASH_VERSINFO[0]} >= 5)); then
-		local timeend=$EPOCHREALTIME
-		timeend=${timeend%.*}
-
-		local timediff=$((timeend - __bake_global_timestart))
+		local timediff=$((EPOCHSECONDS - __bake_global_timestart))
 		if ((timediff < 1)); then
 			return
 		fi
