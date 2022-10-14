@@ -16,9 +16,12 @@
 # Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 
 __global_bake_version='1.11.0'
+
 if [ "$BAKE_INTERNAL_ONLY_VERSION" = 'yes' ]; then
+	# This is unused, but keep it here just in case
 	# shellcheck disable=SC2034
 	BAKE_INTERNAL_ONLY_VERSION_SUCCESS='yes'
+
 	return 0
 fi
 
