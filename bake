@@ -295,14 +295,6 @@ __bake_error() {
 __bake_parse_task_comments() {
 	local task_name="$1"
 
-	declare -g __bake_config_docstring=
-	declare -ga __bake_config_watchexec_args=()
-	declare -gA __bake_config_map=(
-		[stacktrace]='off'
-		[big-print]='on'
-		[pedantic-cd]='off'
-	)
-
 	local tmp_docstring=
 	local -a tmp_watch_args=()
 	local -A tmp_cfg_map=()
@@ -428,7 +420,7 @@ __bake_print_tasks() {
 __bake_print_big() {
 	local print_text="$1"
 
-	if [ "$__bake_cfg_big_print" = 'off' ]; then
+	if [ "${__bake_config_map[big-print]}" = 'off' ]; then
 		return
 	fi
 
@@ -550,10 +542,6 @@ __bake_parse_args() {
 # @description Main function
 # @internal
 __bake_main() {
-	bake.cfg stacktrace 'off'
-	bake.cfg big-print 'on'
-	bake.cfg pedantic-task-cd 'off'
-
 	# Environment and configuration boilerplate
 	set -ETeo pipefail
 	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
@@ -577,32 +565,34 @@ __bake_main() {
 	# shellcheck disable=SC1007
 	local __bake_key= __bake_value= __bake_arg=
 	for __bake_arg; do case $__bake_arg in
-		*=*)
-			IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
+	*=*)
+		IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
 
-			# breaking: remove in v2
-			# If 'key=value' is passed, create global varaible $value
-			declare -g "$__bake_key"
-			local -n __bake_variable="$__bake_key"
-			__bake_variable="$__bake_value"
+		# breaking: remove in v2
+		# If 'key=value' is passed, create global varaible $value
+		declare -g "$__bake_key"
+		local -n __bake_variable="$__bake_key"
+		__bake_variable="$__bake_value"
 
-			# If 'key=value' is passed, create global varaible $value_key
-			declare -g "var_$__bake_key"
-			local -n __bake_variable="var_$__bake_key"
-			__bake_variable="$__bake_value"
+		# If 'key=value' is passed, create global varaible $value_key
+		declare -g "var_$__bake_key"
+		local -n __bake_variable="var_$__bake_key"
+		__bake_variable="$__bake_value"
 
-			if ! shift; then
-				__bake_internal_die 'Failed to shift'
-			fi
-			;;
-		*) break
+		if ! shift; then
+			__bake_internal_die 'Failed to shift'
+		fi
+		;;
+	*)
+		break
+		;;
 	esac done; unset -v __bake_arg
 	unset -v __bake_key __bake_value
 	unset -vn __bake_variable
 
 	local __bake_task="$1"
 	if [ -z "$__bake_task" ]; then
-		__bake_internal_error "No valid task supplied"
+		__bake_internal_error 'No valid task supplied'
 		__bake_print_tasks
 		exit 1
 	fi
@@ -611,6 +601,14 @@ __bake_main() {
 	fi
 
 	declare -ga __bake_args_userflags=("$@")
+
+	declare -g __bake_config_docstring=
+	declare -ga __bake_config_watchexec_args=()
+	declare -gA __bake_config_map=(
+		[stacktrace]='off'
+		[big-print]='on'
+		[pedantic-cd]='off'
+	)
 
 	if [ "$FLAG_WATCH" = 'yes' ]; then
 		if ! command -v watchexec &>/dev/null; then
