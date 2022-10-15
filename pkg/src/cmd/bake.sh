@@ -7,8 +7,8 @@ __bake_copy_bakescript() {
 	if [ -z ${__version_old+x} ]; then
 		__bake_internal_warn "Updating from version <=1.10.0 to $__version_new"
 	else
-		if [ -n "$__version_old" ] && [ "$version_old" != "$__version_new" ]; then
-			__bake_internal_warn "Updating from version $version_old to $__version_new"
+		if [ -n "$__version_old" ] && [ "$__version_old" != "$__version_new" ]; then
+			__bake_internal_warn "Updating from version $__version_old to $__version_new"
 		fi
 	fi
 
@@ -28,7 +28,7 @@ __bake_just_in_case_trap_debug() {
 	local current_function="${FUNCNAME[1]}"
 
 	if [ "$current_function" = '__bake_main' ]; then
-		local version_old="$__global_bake_version"
+		local __version_old="$__global_bake_version"
 
 		trap - DEBUG
 		unset -v BAKE_INTERNAL_ONLY_VERSION
