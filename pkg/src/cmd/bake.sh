@@ -35,7 +35,7 @@ __bake_just_in_case_trap_debug() {
 		unset -v BAKE_INTERNAL_CAN_SOURCE
 
 		__bake_copy_bakescript
-		exec "$BAKE_ROOT/bake" "$@"
+		exec "$BAKE_ROOT/bake" "${__bake_backup_args[@]}"
 	fi
 }
 
@@ -57,6 +57,8 @@ main.bake() {
 		# We check if a 'bake' script already exists, so we can the "current" (pre-replacement) version, and tell
 		# the user if the script is going to be updated. This requires some tricks, as mentioned below
 		if [ -f "$BAKE_ROOT/bake" ]; then
+			local -a __bake_backup_args=("$@")
+
 			# These traps are required because 'BAKE_INTERNAL_ONLY_VERSION' is a recent addition. With older versions
 			# that don't test for it, the source will run through the whole script, including the __bake_main
 			# function (this is also why BAKE_INTERNAL_CAN_SOURCE=yes - so this feature doesn't cause older scripts
@@ -69,6 +71,7 @@ main.bake() {
 			BAKE_INTERNAL_ONLY_VERSION='yes' BAKE_INTERNAL_CAN_SOURCE='yes' source "$BAKE_ROOT/bake"
 			trap - DEBUG
 			__version_old=$__global_bake_version
+			unset -v __bake_backup_args
 		fi
 
 		__bake_copy_bakescript
