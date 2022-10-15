@@ -15,7 +15,7 @@
 #
 # Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 
-__global_bake_version='1.11.1'
+__global_bake_version='1.11.2'
 
 if [ "$BAKE_INTERNAL_ONLY_VERSION" = 'yes' ]; then
 	# This is unused, but keep it here just in case
