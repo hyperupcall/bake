@@ -155,9 +155,9 @@ bake.cfg() {
 		;;
 	pedantic-task-cd)
 		case $value in
-			yes) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg pedantic-task-cd' is deprecated. Instead, use either 'on' or 'off'"; trap '__bake_trap_debug' 'DEBUG' ;;
+			yes) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg pedantic-task-cd' is deprecated. Instead, use either 'on' or 'off'"; trap '__bake_trap_debug_fixcd' 'DEBUG' ;;
 			no) __bake_internal_warn "Passing either 'yes' or 'no' as a value for 'bake.cfg pedantic-task-cd' is deprecated. Instead, use either 'on' or 'off'"; trap - 'DEBUG' ;;
-			on) trap '__bake_trap_debug' 'DEBUG' ;;
+			on) trap '__bake_trap_debug_fixcd' 'DEBUG' ;;
 			off) trap - 'DEBUG' ;;
 			*) __bake_internal_bigdie "Config property '$cfg' accepts only either 'on' or 'off'" ;;
 		esac
@@ -198,19 +198,44 @@ __bake_trap_err() {
 	exit $error_code
 } >&2
 
-__global_bake_trap_debug_current_function=
-__bake_trap_debug() {
+# @description When running a task, ensure that we start in the correct directory
+# @internal
+__bake_trap_debug_fixcd_current_fn=
+__bake_trap_debug_fixcd() {
 	local current_function="${FUNCNAME[1]}"
 
-	if [[ $current_function != "$__global_bake_trap_debug_current_function" \
+	if [[ $current_function != "$__bake_trap_debug_fixcd_current_fn" \
 			&& $current_function == task.* ]]; then
 		if ! cd -- "$BAKE_ROOT"; then
 			__bake_internal_die "Failed to cd to \$BAKE_ROOT"
 		fi
 	fi
 
-	__global_bake_trap_debug_current_function=$current_function
+	__bake_trap_debug_fixcd_current_fn=$current_function
 } >&2
+
+# @description Ensure that the main function is not ran
+# @internal
+__bake_trap_debug_barrier() {
+	local current_function="${FUNCNAME[1]}"
+
+	if [ "$current_function" = '__bake_main' ]; then
+		# shellcheck disable=SC2034
+		local __version_old="$__global_bake_version"
+
+		trap - DEBUG
+		unset -v BAKE_INTERNAL_ONLY_VERSION
+		unset -v BAKE_INTERNAL_CAN_SOURCE
+
+		__bake_copy_bakescript
+		if [ "$BAKE_FLAG_UPDATE" = 'yes' ]; then
+			exit 0
+		else
+			# shellcheck disable=SC2154
+			exec "$BAKE_ROOT/bake" "${__bake_global_backup_args[@]}"
+		fi
+	fi
+}
 
 # @description Test whether color should be outputed
 # @exitcode 0 if should print color
@@ -315,6 +340,32 @@ __bake_should_replace_bakescript() {
 	fi
 
 	return 0
+}
+
+# @description Copy 'bake' script to current context
+# @internal
+__bake_copy_bakescript() {
+	# If there was an older version, and the versions are different, let the user know
+	if [ -z ${__version_old+x} ]; then
+		# shellcheck disable=SC2154
+		__bake_internal_warn "Updating from version <=1.10.0 to $__version_new"
+	else
+		if [ -n "$__version_old" ] && [ "$__version_old" != "$__version_new" ]; then
+			__bake_internal_warn "Updating from version $__version_old to $__version_new"
+		fi
+	fi
+
+	# shellcheck disable=SC2154
+	if ! cp -f "$__bake_dynamic_script" "$BAKE_ROOT/bake"; then
+		__bake_internal_die "Failed to copy 'bakeScript.sh'"
+	fi
+	if ! printf '\n%s\n' '__bake_main "$@"' >> "$BAKE_ROOT/bake"; then
+		__bake_internal_die "Failed to append to '$BAKE_ROOT/bake'"
+	fi
+
+	if ! chmod +x "$BAKE_ROOT/bake"; then
+		__bake_internal_die "Failed to 'chmod +x' bake script" >&2
+	fi
 }
 
 # @description Prepares internal variables for time setting
