@@ -498,7 +498,7 @@ __bake_print_big() {
 	fi
 
 	__bake_time_get_total_pretty
-	local time_str=" (time: $REPLY) "
+	local time_str="${REPLY:+ ($REPLY) }"
 
 	# shellcheck disable=SC1007
 	local _stty_height= _stty_width=
