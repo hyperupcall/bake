@@ -4,8 +4,12 @@
 # @internal
 __bake_copy_bakescript() {
 	# If there was an older version, and the versions are different, let the user know
-	if [ -n "$version_old" ] && [ "$version_old" != "$version_new" ]; then
-		__bake_internal_warn "Updating from version $version_old to $version_new"
+	if [ -z ${__version_old+x} ]; then
+		__bake_internal_warn "Updating from version <=1.10.0 to $__version_new"
+	else
+		if [ -n "$__version_old" ] && [ "$version_old" != "$__version_new" ]; then
+			__bake_internal_warn "Updating from version $version_old to $__version_new"
+		fi
 	fi
 
 	if ! cp -f "$bake_script" "$BAKE_ROOT/bake"; then
@@ -40,7 +44,7 @@ main.bake() {
 
 	# shellcheck disable=SC1090
 	BAKE_INTERNAL_CAN_SOURCE='yes' source "$bake_script"
-	local version_new=$__global_bake_version
+	local __version_new=$__global_bake_version
 
 	# Set `BAKE_{ROOT,FILE}`
 	BAKE_ROOT=; BAKE_FILE=
@@ -48,7 +52,7 @@ main.bake() {
 
 	# If we are allowed to replace the 'bake' script (when not in Git interactive rebase, etc.), then do so.
 	if __bake_should_replace_bakescript; then
-		local version_old=
+		local __version_old
 
 		# We check if a 'bake' script already exists, so we can the "current" (pre-replacement) version, and tell
 		# the user if the script is going to be updated. This requires some tricks, as mentioned below
@@ -64,7 +68,7 @@ main.bake() {
 			# shellcheck disable=SC1091
 			BAKE_INTERNAL_ONLY_VERSION='yes' BAKE_INTERNAL_CAN_SOURCE='yes' source "$BAKE_ROOT/bake"
 			trap - DEBUG
-			version_old=$__global_bake_version
+			__version_old=$__global_bake_version
 		fi
 
 		__bake_copy_bakescript
