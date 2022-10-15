@@ -35,7 +35,11 @@ __bake_just_in_case_trap_debug() {
 		unset -v BAKE_INTERNAL_CAN_SOURCE
 
 		__bake_copy_bakescript
-		exec "$BAKE_ROOT/bake" "${__bake_backup_args[@]}"
+		if [ "$BAKE_FLAG_UPDATE" = 'yes' ]; then
+			exit 0
+		else
+			exec "$BAKE_ROOT/bake" "${__bake_backup_args[@]}"
+		fi
 	fi
 }
 
@@ -75,9 +79,15 @@ main.bake() {
 		fi
 
 		__bake_copy_bakescript
-		exec "$BAKE_ROOT/bake" "$@"
+		if [ "$BAKE_FLAG_UPDATE" != 'yes' ]; then
+			exec "$BAKE_ROOT/bake" "$@"
+		fi
 	else
-		__bake_internal_warn "Skipping 'bake' script replacement"
-		__bake_main "$@"
+		if [ "$BAKE_FLAG_UPDATE" = 'yes' ]; then
+			__bake_copy_bakescript
+		else
+			__bake_internal_warn "Skipping 'bake' script replacement"
+			__bake_main "$@"
+		fi
 	fi
 }

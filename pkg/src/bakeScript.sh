@@ -556,6 +556,12 @@ __bake_parse_args() {
 			__bake_internal_die "Specified file '$BAKE_FILE' is not actually a file"
 		fi
 		;;
+	-h)
+		local flag_help='yes'
+		if ! shift; then
+			__bake_internal_die 'Failed to shift'
+		fi
+		;;
 	-w)
 		((total_shifts += 1))
 		if ! shift; then
@@ -566,15 +572,17 @@ __bake_parse_args() {
 			BAKE_FLAG_WATCH='yes'
 		fi
 		;;
-	-v)
-		printf '%s\n' "Version: $__global_bake_version"
-		exit 0
-		;;
-	-h)
-		local flag_help='yes'
+	-u)
+		((total_shifts += 1))
 		if ! shift; then
 			__bake_internal_die 'Failed to shift'
 		fi
+
+		BAKE_FLAG_UPDATE='yes'
+		;;
+	-v)
+		printf '%s\n' "Version: $__global_bake_version"
+		exit 0
 		;;
 	*)
 		break
@@ -609,7 +617,7 @@ __bake_parse_args() {
 
 	if [ "$flag_help" = 'yes' ]; then
 		cat <<-"EOF"
-		Usage: bake [-h|-v] [-w] [-f <Bakefile>] [var=value ...] <task> [args ...]
+		Usage: bake [-h|-v] [-u|-w] [-f <Bakefile>] [var=value ...] <task> [args ...]
 		EOF
 		__bake_print_tasks
 		exit
