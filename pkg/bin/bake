@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 
+if [[ -v BAKE_INTERNAL_EXPERIMENTAL_SINGLEFILE ]]; then
+	# These realpath invocations will be gone once 'bakeScript' becomes the 'binary'
+	__bake_file=$(realpath "$0")
+	exec "${__bake_file%/*}/../src/bakeScript.sh" "$@"
+fi
+
 eval "$(basalt-package-init)"
 basalt.package-init || exit
 basalt.package-load || exit
 
+# shellcheck disable=SC1091
 source "$BASALT_PACKAGE_DIR/pkg/src/cmd/bake.sh"
 main.bake "$@"

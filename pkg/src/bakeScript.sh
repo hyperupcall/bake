@@ -785,3 +785,11 @@ __bake_main() {
 		fi
 	fi
 }
+
+__bake_entrypoint() {
+	printf '%s\n' 'Not implemented.'
+}
+
+if [[ -v BAKE_INTERNAL_EXPERIMENTAL_SINGLEFILE ]]; then
+	__bake_entrypoint "$@"
+fi

@@ -5,10 +5,13 @@ main.bake() {
 
 	# shellcheck disable=SC1090
 	BAKE_INTERNAL_CAN_SOURCE='yes' source "$__bake_dynamic_script"
+	# shellcheck disable=SC2154
 	local __version_new="$__global_bake_version"
 
 	# Set `BAKE_{ROOT,FILE}`
-	BAKE_ROOT=; BAKE_FILE=
+	BAKE_ROOT=;
+	# shellcheck disable=SC2034
+	BAKE_FILE=
 	__bake_parse_args "$@"
 
 	# If we are allowed to replace the 'bake' script (when not in Git interactive rebase, etc.), then do so.

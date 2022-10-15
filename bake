@@ -350,7 +350,7 @@ __bake_copy_bakescript() {
 		# shellcheck disable=SC2154
 		__bake_internal_warn "Updating from version <=1.10.0 to $__version_new"
 	else
-		if [ -n "$__version_old" ] && [ "$version_old" != "$__version_new" ]; then
+		if [ -n "$__version_old" ] && [ "$__version_old" != "$__version_new" ]; then
 			__bake_internal_warn "Updating from version $__version_old to $__version_new"
 		fi
 	fi
@@ -785,5 +785,13 @@ __bake_main() {
 		fi
 	fi
 }
+
+__bake_entrypoint() {
+	printf '%s\n' 'Not implemented.'
+}
+
+if [[ -v BAKE_INTERNAL_EXPERIMENTAL_SINGLEFILE ]]; then
+	__bake_entrypoint "$@"
+fi
 
 __bake_main "$@"
