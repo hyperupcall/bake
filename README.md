@@ -93,6 +93,22 @@ To sum it up, _it just works_
 
 ## Installation
 
+## Brew
+
+Coming soon...
+
+## Manual
+
+```sh
+git clone 'https://github.com/hyperupcall/bake' ~/.bake
+cd ~/.bake
+printf '%s\n' 'PATH="$HOME/.bake/pkg/bin:$PATH"' >> ~/.bashrc
+```
+
+## Basalt
+
+Not recommended, as Basalt is still Beta-quality
+
 Use [Basalt](https://github.com/hyperupcall/basalt), a Bash package manager, to install this project globally
 
 ```sh
