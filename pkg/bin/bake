@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-__bake_file=$(realpath "$0")
-exec "${__bake_file%/*}/../src/bakeScript.sh" "$@"
