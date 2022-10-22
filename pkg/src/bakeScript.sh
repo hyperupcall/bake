@@ -552,19 +552,16 @@ __bake_print_big() {
 	local time_str="${REPLY:+ ($REPLY) }"
 
 	# shellcheck disable=SC1007
-	local _stty_height= _stty_width=
-	read -r _stty_height _stty_width < <(
-		if stty size &>/dev/null; then
-			stty size
+	local output= _stty_width=
+	if output=$(stty size 2>&1); then
+		_stty_width=${output##* }
+	else
+		if [ -n "$COLUMNS" ]; then
+			_stty_width="$COLUMNS"
 		else
-			# Only columns is used by Bake, so '20  was chosen arbitrarily
-			if [ -n "$COLUMNS" ]; then
-				printf '%s\n' "20 $COLUMNS"
-			else
-				printf '%s\n' '20 80'
-			fi
+			_stty_width='80'
 		fi
-	)
+	fi; unset -v output
 
 	local separator_text=
 	# shellcheck disable=SC2183
