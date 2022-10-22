@@ -11,8 +11,6 @@ dependencies = ['https://github.com/hyperupcall/bats-all.git@v4.2.0']
 binDirs = ['pkg/bin']
 
 [run.setOptions]
-errexit = 'on'
-pipefail = 'on'
 
 [run.shoptOptions]
-shift_verbose = 'on'
+

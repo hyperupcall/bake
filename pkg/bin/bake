@@ -654,15 +654,6 @@ __bake_parse_args() {
 # @description Main function
 # @internal
 __bake_main() {
-	# Environment and configuration boilerplate
-	set -ETeo pipefail
-	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
-	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' \
-		LC_MONETARY='C' LC_MESSAGES='C' LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' \
-		LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
-	trap '__bake_trap_err' 'ERR'
-	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
-
 	declare -ga __bake_args_original=("$@")
 
 	# Parse arguments
@@ -781,6 +772,19 @@ __bake_setup_copy_bakescript() {
 }
 
 __bake_entrypoint() {
+	# Environment boilerplate
+	set -ETeo pipefail
+	shopt -s dotglob extglob globasciiranges globstar lastpipe shift_verbose
+	if ((BASH_VERSINFO[0] >= 6 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 2))); then
+		shopt -s noexpand_translation
+	fi
+	export LANG='C' LC_CTYPE='C' LC_NUMERIC='C' LC_TIME='C' LC_COLLATE='C' \
+		LC_MONETARY='C' LC_MESSAGES='C' LC_PAPER='C' LC_NAME='C' LC_ADDRESS='C' \
+		LC_TELEPHONE='C' LC_MEASUREMENT='C' LC_IDENTIFICATION='C' LC_ALL='C'
+	trap '__bake_trap_err' 'ERR'
+	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
+
+	# Argument parsing
 	declare -g BAKE_{ROOT,FILE}= BAKE_INTERNAL_{FLAG_UPDATE,FLAG_WATCH}=
 	__bake_parse_args "$@"
 	declare -g BAKE_INTERNAL_HAS_PARSED_ARGS='yes'
