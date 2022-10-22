@@ -1,14 +1,15 @@
 # shellcheck shell=bash
-
 eval "$(basalt-package-init)"
 basalt.package-init || exit
 basalt.package-load
-basalt.load 'github.com/hyperupcall/bats-all' 'load.bash' || exit
+basalt.load 'github.com/hyperupcall/bats-all' 'load.bash'
+
+bats_require_minimum_version 1.5.0
 
 load './util/test_utils.sh'
 
-source "$BASALT_PACKAGE_DIR/pkg/src/cmd/bake.sh"
-bake() { main.bake "$@"; }
+BAKE_INTERNAL_CAN_SOURCE='yes' BAKE_INTERNAL_TEST='yes' source "$BASALT_PACKAGE_DIR/pkg/bin/bake"
+bake() { __bake_entrypoint "$@"; }
 
 setup() {
 	cd "$BATS_TEST_TMPDIR"

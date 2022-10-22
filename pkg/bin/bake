@@ -602,6 +602,7 @@ __bake_parse_args() {
 		local -n __bake_variable="var_$__bake_key"
 		__bake_variable="$__bake_value"
 
+		((total_shifts += 1))
 		if ! shift; then
 			__bake_internal_die 'Failed to shift'
 		fi
@@ -787,6 +788,9 @@ __bake_entrypoint() {
 	# Argument parsing
 	declare -g BAKE_{ROOT,FILE}= BAKE_INTERNAL_{FLAG_UPDATE,FLAG_WATCH}=
 	__bake_parse_args "$@"
+	if ! shift $REPLY; then
+		__bake_internal_die 'Failed to shift'
+	fi
 	declare -g BAKE_INTERNAL_HAS_PARSED_ARGS='yes'
 
 	local should_copy_bakescript='no'
@@ -828,7 +832,7 @@ __bake_entrypoint() {
 		# 	unset -v __bake_global_backup_args
 		# 	# TODO: re-source $0 so correct functions are in scope
 		# fi
-		__bake_main
+		__bake_main "$@"
 	fi
 
 	if [ "$should_exec" = 'yes' ]; then
@@ -838,4 +842,6 @@ __bake_entrypoint() {
 	fi
 }
 
-__bake_entrypoint "$@"
+if [ "$BAKE_INTERNAL_TEST" != 'yes' ]; then
+	__bake_entrypoint "$@"
+fi

@@ -9,7 +9,7 @@ load './util/init.sh'
 task.run() { :; }
 EOF
 
-	run --separate-stderr bake -f "$f" run
+	run bake -f "$f" run
 	assert_success
 	assert [ -f './bake' ]
 }
