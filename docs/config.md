@@ -15,12 +15,6 @@ task.docs() {
 
 If no value is given, it defaults to `true`
 
-The deprecated method is with `bake.cfg`. Do not use this method as it will be removed in a future release. Example:
-
-```sh
-bake.cfg 'big-print' 'off'
-```
-
 ## Options
 
 ### `stacktrace`
@@ -29,29 +23,28 @@ Prints a stacktrace when a task fails.
 
 This isn't enabled by default since the failed task is rarely an issue with Bake, but the underlying command line tool it executes. Disabling it by defualt prevents unecessary clogging of the terminal
 
-### `big-print` (REMOVED)
-
-This is only configurable in the comments.
+### `big-print`
 
 Big decorative lines are printed before and after execution of a task. This helps seeing which task is printed, but sometimes it can get in the way
 
-This config switch __only__ works if `bake.cfg ...` is called either:
-
-- On the first line of a `task.<TASK>()` function
-- On the first line of the `init()` function
-
-Like so:
-
-```sh
-task.test() {
-  bake.cfg 'big-print' 'off'
-}
-```
-
 This is enabled by default
 
-### `pedantic-task-cd`
+### `pedantic-task-cd` (deprecated)
 
 Ensures that the `$PWD` will _always_ be correct when running a task. Nearly always it is, with the only exception occuring for the case where a directory is changed within a task, and another task is manually ran
 
 This isn't enabled by default since it traps `DEBUG` (and therefore feels messy)
+
+## Environment
+
+### `BAKE_FILE`
+
+The absolute path of the `Bakefile.sh` being used for running tasks
+
+### `BAKE_ROOT`
+
+The absolute path of the directory containing the aforementioned `Bakefile.sh`. Essentially `${BAKE_FILE%/*}`
+
+### `PWD`
+
+Because Bake automatically switches to `BAKE_ROOT` before executing a task, this has the same value as `BAKE_ROOT`

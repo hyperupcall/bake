@@ -17,14 +17,12 @@
 
 __global_bake_version='1.11.2'
 
+# Return early if only the version is needed. This improves performance
 if [ "$BAKE_INTERNAL_ONLY_VERSION" = 'yes' ]; then
-	# This is unused, but keep it here just in case
-	# shellcheck disable=SC2034
-	BAKE_INTERNAL_ONLY_VERSION_SUCCESS='yes'
-
 	return 0
 fi
 
+# Source guard
 if [ "$0" != "${BASH_SOURCE[0]}" ] && [ "$BAKE_INTERNAL_CAN_SOURCE" != 'yes' ]; then
 	printf '%s\n' 'Error: This file should not be sourced' >&2
 	return 1
@@ -219,6 +217,7 @@ __bake_trap_debug_fixcd() {
 __bake_trap_debug_barrier() {
 	local current_function="${FUNCNAME[1]}"
 
+	# We don't check for '__bake_entrypoint', since
 	if [ "$current_function" = '__bake_main' ]; then
 		# shellcheck disable=SC2034
 		local __version_old="$__global_bake_version"
@@ -227,8 +226,8 @@ __bake_trap_debug_barrier() {
 		unset -v BAKE_INTERNAL_ONLY_VERSION
 		unset -v BAKE_INTERNAL_CAN_SOURCE
 
-		__bake_copy_bakescript
-		if [ "$BAKE_FLAG_UPDATE" = 'yes' ]; then
+		__bake_setup_copy_bakescript
+		if [ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' ]; then
 			exit 0
 		else
 			# shellcheck disable=SC2154
@@ -317,56 +316,6 @@ __bake_error() {
 		printf '%s: %s\n' 'Error' "$1"
 	fi
 } >&2
-
-
-# @description Tests if the './bake' file should be replaced. It should only
-# be replaced if we're not in an interactive Git context
-# @internal
-__bake_should_replace_bakescript() {
-	local dir="$BAKE_ROOT"
-	while [ ! -d "$dir/.git" ] && [[ -n "$dir" ]]; do
-		dir=${dir%/*}
-	done
-
-	if [ -d "$dir/.git" ]; then
-		# ref: https://github.com/git/git/blob/d420dda0576340909c3faff364cfbd1485f70376/wt-status.c#L1749
-		# ref2: https://github.com/Byron/gitoxide/blob/375051fa97d79f95fa7179b536e616c4aefd88e2/git-repository/src/repository/state.rs#L8
-		local file=
-		for file in {rebase-apply/applying,rebase-apply/rebasing,rebase-apply,rebase-merge/interactive,rebase-merge,CHERRY_PICK_HEAD,MERGE_HEAD,BISECT_LOG,REVERT_HEAD}; do
-			if [ -f "$dir/.git/$file" ]; then
-				return 1
-			fi
-		done; unset -v file
-	fi
-
-	return 0
-}
-
-# @description Copy 'bake' script to current context
-# @internal
-__bake_copy_bakescript() {
-	# If there was an older version, and the versions are different, let the user know
-	if [ -z ${__version_old+x} ]; then
-		# shellcheck disable=SC2154
-		__bake_internal_warn "Updating from version <=1.10.0 to $__version_new"
-	else
-		if [ -n "$__version_old" ] && [ "$__version_old" != "$__version_new" ]; then
-			__bake_internal_warn "Updating from version $__version_old to $__version_new"
-		fi
-	fi
-
-	# shellcheck disable=SC2154
-	if ! cp -f "$__bake_dynamic_script" "$BAKE_ROOT/bake"; then
-		__bake_internal_die "Failed to copy 'bakeScript.sh'"
-	fi
-	if ! printf '\n%s\n' '__bake_main "$@"' >> "$BAKE_ROOT/bake"; then
-		__bake_internal_die "Failed to append to '$BAKE_ROOT/bake'"
-	fi
-
-	if ! chmod +x "$BAKE_ROOT/bake"; then
-		__bake_internal_die "Failed to 'chmod +x' bake script" >&2
-	fi
-}
 
 # @description Prepares internal variables for time setting
 # @internal
@@ -552,19 +501,16 @@ __bake_print_big() {
 	local time_str="${REPLY:+ ($REPLY) }"
 
 	# shellcheck disable=SC1007
-	local _stty_height= _stty_width=
-	read -r _stty_height _stty_width < <(
-		if stty size &>/dev/null; then
-			stty size
+	local output= _stty_width=
+	if output=$(stty size 2>&1); then
+		_stty_width=${output##* }
+	else
+		if [ -n "$COLUMNS" ]; then
+			_stty_width="$COLUMNS"
 		else
-			# Only columns is used by Bake, so '20  was chosen arbitrarily
-			if [ -n "$COLUMNS" ]; then
-				printf '%s\n' "20 $COLUMNS"
-			else
-				printf '%s\n' '20 80'
-			fi
+			_stty_width='80'
 		fi
-	)
+	fi; unset -v output
 
 	local separator_text=
 	# shellcheck disable=SC2183
@@ -588,6 +534,13 @@ __bake_parse_args() {
 	unset -v REPLY; REPLY=
 	local -i total_shifts=0
 
+	if [ "$BAKE_INTERNAL_HAS_PARSED_ARGS" = 'yes' ]; then
+		REPLY=$total_shifts
+		return
+	fi
+
+	# shellcheck disable=SC1007
+	local __bake_key= __bake_value= __bake_arg=
 	local arg=
 	for arg; do case $arg in
 	-f)
@@ -620,7 +573,7 @@ __bake_parse_args() {
 		fi
 
 		if [[ ! -v 'BAKE_INTERNAL_NO_WATCH_OVERRIDE' ]]; then
-			BAKE_FLAG_WATCH='yes'
+			BAKE_INTERNAL_FLAG_WATCH='yes'
 		fi
 		;;
 	-u)
@@ -629,16 +582,37 @@ __bake_parse_args() {
 			__bake_internal_die 'Failed to shift'
 		fi
 
-		BAKE_FLAG_UPDATE='yes'
+		BAKE_INTERNAL_FLAG_UPDATE='yes'
 		;;
 	-v)
 		printf '%s\n' "Version: $__global_bake_version"
 		exit 0
 		;;
+	*=*)
+		# Set variables à la Make
+		IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
+
+		# If 'key=value' is passed, create global variable $value
+		declare -g "$__bake_key"
+		local -n __bake_variable="$__bake_key"
+		__bake_variable="$__bake_value"
+
+		# If 'key=value' is passed, create global variable $value_key
+		declare -g "var_$__bake_key"
+		local -n __bake_variable="var_$__bake_key"
+		__bake_variable="$__bake_value"
+
+		if ! shift; then
+			__bake_internal_die 'Failed to shift'
+		fi
+		;;
 	*)
 		break
 		;;
 	esac done; unset -v arg
+	unset -v __bake_arg
+	unset -v __bake_key __bake_value
+	unset -vn __bake_variable
 
 	if [ -n "$BAKE_FILE" ]; then
 		BAKE_ROOT=$(
@@ -692,40 +666,10 @@ __bake_main() {
 	declare -ga __bake_args_original=("$@")
 
 	# Parse arguments
-	# Set `BAKE_{ROOT,FILE,FLAG_WATCH}`
-	BAKE_ROOT=; BAKE_FILE=; BAKE_FLAG_WATCH=
 	__bake_parse_args "$@"
 	if ! shift $REPLY; then
 		__bake_internal_die 'Failed to shift'
 	fi
-
-	# Set variables à la Make
-	# shellcheck disable=SC1007
-	local __bake_key= __bake_value= __bake_arg=
-	for __bake_arg; do case $__bake_arg in
-	*=*)
-		IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
-
-		# If 'key=value' is passed, create global variable $value
-		declare -g "$__bake_key"
-		local -n __bake_variable="$__bake_key"
-		__bake_variable="$__bake_value"
-
-		# If 'key=value' is passed, create global variable $value_key
-		declare -g "var_$__bake_key"
-		local -n __bake_variable="var_$__bake_key"
-		__bake_variable="$__bake_value"
-
-		if ! shift; then
-			__bake_internal_die 'Failed to shift'
-		fi
-		;;
-	*)
-		break
-		;;
-	esac done; unset -v __bake_arg
-	unset -v __bake_key __bake_value
-	unset -vn __bake_variable
 
 	local __bake_task="$1"
 	if [ -z "$__bake_task" ]; then
@@ -747,7 +691,7 @@ __bake_main() {
 		[pedantic-cd]='off'
 	)
 
-	if [ "$BAKE_FLAG_WATCH" = 'yes' ]; then
+	if [ "$BAKE_INTERNAL_FLAG_WATCH" = 'yes' ]; then
 		if ! command -v watchexec &>/dev/null; then
 			__bake_internal_die "Executable not found: 'watchexec'"
 		fi
@@ -786,12 +730,109 @@ __bake_main() {
 	fi
 }
 
-__bake_entrypoint() {
-	printf '%s\n' 'Not implemented.'
+
+# @description Tests if the './bake' file should be replaced. It should only
+# be replaced if we're not in an interactive Git context
+# @internal
+__bake_setup_should_replace_bakescript() {
+	local dir="$BAKE_ROOT"
+	while [ ! -d "$dir/.git" ] && [ -n "$dir" ]; do
+		dir=${dir%/*}
+	done
+
+	if [ -d "$dir/.git" ]; then
+		# ref: https://github.com/git/git/blob/d420dda0576340909c3faff364cfbd1485f70376/wt-status.c#L1749
+		# ref2: https://github.com/Byron/gitoxide/blob/375051fa97d79f95fa7179b536e616c4aefd88e2/git-repository/src/repository/state.rs#L8
+		local file=
+		for file in {rebase-apply/applying,rebase-apply/rebasing,rebase-apply,rebase-merge/interactive,rebase-merge,CHERRY_PICK_HEAD,MERGE_HEAD,BISECT_LOG,REVERT_HEAD}; do
+			if [ -f "$dir/.git/$file" ]; then
+				return 1
+			fi
+		done; unset -v file
+	fi
+
+	return 0
 }
 
-if [[ -v BAKE_INTERNAL_EXPERIMENTAL_SINGLEFILE ]]; then
-	__bake_entrypoint "$@"
-fi
+# @description Copy 'bake' script to current context
+# @internal
+__bake_setup_copy_bakescript() {
+	# If there was an older version, and the versions are different, let the user know
+	if [ -z ${__version_old+x} ]; then
+		# shellcheck disable=SC2154
+		__bake_internal_warn "Updating from version <=1.10.0 to $__version_new"
+	else
+		if [ -n "$__version_old" ] && [ "$__version_old" != "$__version_new" ]; then
+			__bake_internal_warn "Updating from version $__version_old to $__version_new"
+		fi
+	fi
 
-__bake_main "$@"
+	# shellcheck disable=SC2154
+	if ! cp -f "$0" "$BAKE_ROOT/bake"; then
+		__bake_internal_die "Failed to copy 'bakeScript.sh'"
+	fi
+	# if ! printf '\n%s\n' '__bake_entrypoint "$@"' >> "$BAKE_ROOT/bake"; then
+	# 	__bake_internal_die "Failed to append to '$BAKE_ROOT/bake'"
+	# fi TODO: remove
+
+	if ! chmod +x "$BAKE_ROOT/bake"; then
+		__bake_internal_die "Failed to 'chmod +x' bake script" >&2
+	fi
+}
+
+__bake_entrypoint() {
+	declare -g BAKE_{ROOT,FILE}= BAKE_INTERNAL_{FLAG_UPDATE,FLAG_WATCH}=
+	__bake_parse_args "$@"
+	declare -g BAKE_INTERNAL_HAS_PARSED_ARGS='yes'
+
+	local should_copy_bakescript='no'
+	if [[ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' || ! -f "$BAKE_ROOT/bake" ]]; then
+		should_copy_bakescript='yes'
+	fi
+
+	local should_exec='no'
+	if [ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' ] || [[ "$BAKE_INTERNAL_FLAG_UPDATE" != 'yes' && ! -f "$BAKE_ROOT/bake" ]]; then
+		should_exec='yes'
+	fi
+	echo j $should_exec
+
+	# Only update the 'bake' script if we _have to_
+	if [ "$should_copy_bakescript" = 'yes' ]; then
+		# When we pass '-u', there is a potential for infinite loops. After updating the
+		# file and 'exec'ing into it (done after this if-then block), the '-u' parameter will
+		# still be passed, but we don't want to update it again.
+		__bake_setup_copy_bakescript
+
+		# local __version_new="$__global_bake_version"
+
+		# We check if a 'bake' script already exists, so we can the "current" (pre-replacement) version, and tell
+		# the user if the script is going to be updated. This requires some tricks, as mentioned below
+		# if [ -f "$BAKE_ROOT/bake" ]; then
+		# 	declare -ag __bake_global_backup_args=("$@")
+
+		# 	# These traps are required because 'BAKE_INTERNAL_ONLY_VERSION' is a recent addition. With older versions
+		# 	# that don't test for it, the source will run through the whole script, including the __bake_main
+		# 	# function (this is also why BAKE_INTERNAL_CAN_SOURCE=yes - so this feature doesn't cause older scripts
+		# 	# to just error and die). We use these traps to ensure the script does _not_ run __bake_main. Just "letting
+		# 	# it run" would make things more simple, but that would mean that we will have to run 'bake' twice to perform
+		# 	# the update, instead of just once (and it would not be guaranteed, since it updates at the end). Also, doing
+		# 	# this would mean values like "$0" are not what would be expected.
+		# 	trap '__bake_trap_debug_barrier' DEBUG
+		# 	# shellcheck disable=SC1091
+		# 	BAKE_INTERNAL_ONLY_VERSION='yes' BAKE_INTERNAL_CAN_SOURCE='yes' source "$BAKE_ROOT/bake"
+		# 	trap - DEBUG
+		# 	__version_old=$__global_bake_version
+		# 	unset -v __bake_global_backup_args
+		# 	# TODO: re-source $0 so correct functions are in scope
+		# fi
+		__bake_main
+	fi
+
+	if [ "$should_exec" = 'yes' ]; then
+		exec "$BAKE_ROOT/bake" "$@"
+	else
+		__bake_main "$@"
+	fi
+}
+
+__bake_entrypoint "$@"

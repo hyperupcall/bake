@@ -4,7 +4,7 @@ Some recommendations for using Bake efficiently
 
 ## Conventions
 
-I often order my tasks by natural execution order. For example
+I order my tasks by natural execution order. For example
 
 - `task.init()`
 - `task.dev()`

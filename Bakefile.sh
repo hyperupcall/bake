@@ -34,3 +34,7 @@ task.release-post() {
 		bake.die "Version '$version1' and version '$version2' do not match"
 	fi
 }
+
+task.run1() {
+	printf '%s\n' "$*"
+}
