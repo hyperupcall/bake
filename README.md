@@ -99,6 +99,8 @@ Coming soon...
 
 ## Manual
 
+WARNING: Don't use `main` branch just yet - be sure to switch to latest release!!
+
 ```sh
 git clone 'https://github.com/hyperupcall/bake' ~/.bake
 cd ~/.bake
