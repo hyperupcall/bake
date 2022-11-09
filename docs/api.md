@@ -26,7 +26,6 @@ Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 * [bake.assert_not_empty](#bakeassert_not_empty)
 * [bake.assert_cmd](#bakeassert_cmd)
 * [bake.has_flag](#bakehas_flag)
-* [bake.cfg](#bakecfg)
 
 ### bake.die
 
@@ -89,13 +88,4 @@ Determine if a flag was passed as an argument
 
 * **$1** (string): Flag name to test for
 * **...** (string): Rest of the arguments to search through
-
-### bake.cfg
-
-Change the behavior of Bake. See [guide.md](./docs/guide.md) for details
-
-#### Arguments
-
-* **$1** (string): Name of config property to change
-* **$2** (string): New value of config property
 

@@ -1,10 +1,10 @@
 # Config
 
-Currently, there are three runtime configuration options with `bake.cfg`
+Currently, there are three runtime configuration options
 
 ## Usage
 
-There are two ways to set configuration values. Best is the use of comments like so:
+Set configuration values through comments like so:
 
 ```sh
 # config: stacktrace big-print=off
@@ -13,7 +13,7 @@ task.docs() {
 }
 ```
 
-If no value is given, it defaults to `true`
+If no value is given, it defaults to `on`
 
 ## Options
 
@@ -28,12 +28,6 @@ This isn't enabled by default since the failed task is rarely an issue with Bake
 Big decorative lines are printed before and after execution of a task. This helps seeing which task is printed, but sometimes it can get in the way
 
 This is enabled by default
-
-### `pedantic-task-cd` (deprecated)
-
-Ensures that the `$PWD` will _always_ be correct when running a task. Nearly always it is, with the only exception occuring for the case where a directory is changed within a task, and another task is manually ran
-
-This isn't enabled by default since it traps `DEBUG` (and therefore feels messy)
 
 ## Environment
 
