@@ -505,6 +505,9 @@ __bake_parse_args() {
 	# shellcheck disable=SC1007
 	local __bake_key= __bake_value= __bake_arg= __bake_flag_help=
 	for __bake_arg; do case $__bake_arg in
+	-f?*)
+		bake.die "Flag '-f' must be specified after all other flags"
+		;;
 	-*)
 		((total_shifts += 1))
 		if ! shift; then
