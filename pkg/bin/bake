@@ -554,15 +554,18 @@ __bake_parse_args() {
 		# Set variables à la Make
 		IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
 
-		# If 'key=value' is passed, create global variable $value
-		declare -g "$__bake_key"
-		local -n __bake_variable="$__bake_key"
-		__bake_variable="$__bake_value"
-
-		# If 'key=value' is passed, create global variable $value_key
-		declare -g "var_$__bake_key"
-		local -n __bake_variable="var_$__bake_key"
-		__bake_variable="$__bake_value"
+		if [ "${__bake_key^^}" = "$__bake_key" ]; then
+			# If 'KEY=value' is passed, create global variable $KEY
+			declare -g "$__bake_key"
+			local -n __bake_variable="$__bake_key"
+			__bake_variable="$__bake_value"
+		else
+			# If 'key=value' is passed, create global variable $var_key
+			# Applies to other non-caps keys like 'Key' and 'kEy' as well
+			declare -g "var_$__bake_key"
+			local -n __bake_variable="var_$__bake_key"
+			__bake_variable="$__bake_value"
+		fi
 
 		((total_shifts += 1))
 		if ! shift; then

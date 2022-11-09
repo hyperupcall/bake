@@ -2,70 +2,106 @@
 
 load './util/init.sh'
 
-@test "unprefixed variable (uppercase) works" {
+@test "uppercase unprefix succeeds" {
 	cat > './Bakefile.sh' <<"EOF"
-	task.foo() { printf '%s\n' "$GOO"; }
+task.foo() {
+	if [ "$GOO" = 'value' ]; then
+		printf 'yes'
+	else
+		printf 'no'
+	fi
+}
 EOF
 
 	run --separate-stderr bake GOO=value foo
 
 	assert_success
-	assert_line -n 0 'value'
+	assert_line -n 0 'yes'
 }
 
-@test "unprefixed variable (not uppercase) works 1" {
-	cat > './Bakefile.sh' <<"EOF"
-	task.foo() { printf '%s\n' "$Goo"; }
-EOF
-
-	run --separate-stderr bake Goo=value foo
-
-	assert_success
-	assert_line -n 0 'value'
+@test "uppercase prefix fails" {
+cat > './Bakefile.sh' <<"EOF"
+task.foo() {
+	if [ "$var_GOO" = 'value' ]; then
+		printf 'yes'
+	else
+		printf 'no'
+	fi
 }
-
-@test "unprefixed variable (not uppercase) works 2" {
-	cat > './Bakefile.sh' <<"EOF"
-	task.foo() { printf '%s\n' "$goo"; }
-EOF
-
-	run --separate-stderr bake goo=value foo
-
-	assert_success
-	assert_line -n 0 'value'
-}
-
-@test "prefixed variable (uppercase) works" {
-	cat > './Bakefile.sh' <<"EOF"
-	task.foo() { printf '%s\n' "$var_GOO"; }
 EOF
 
 	run --separate-stderr bake GOO=value foo
 
 	assert_success
-	assert_line -n 0 'value'
+	assert_line -n 0 'no'
 }
 
-@test "prefixed variable (not uppercase) works 1" {
+@test "lowercase unprefix fails" {
 	cat > './Bakefile.sh' <<"EOF"
-	task.foo() { printf '%s\n' "$var_Goo"; }
+task.foo() {
+	if [ "$Goo" = 'value' ]; then
+		printf 'yes'
+	else
+		printf 'no'
+	fi
+}
 EOF
 
 	run --separate-stderr bake Goo=value foo
 
 	assert_success
-	assert_line -n 0 'value'
+	assert_line -n 0 'no'
 }
 
-@test "prefixed variable (not uppercase) works 2" {
+@test "lowercase unprefix fails 2" {
 	cat > './Bakefile.sh' <<"EOF"
-	task.foo() { printf '%s\n' "$var_goo"; }
+task.foo() {
+	if [ "$goo" = 'value' ]; then
+		printf 'yes'
+	else
+		printf 'no'
+	fi
+}
 EOF
 
 	run --separate-stderr bake goo=value foo
 
 	assert_success
-	assert_line -n 0 'value'
+	assert_line -n 0 'no'
+}
+
+@test "lowercase prefix succeeds" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() {
+	if [ "$var_Goo" = 'value' ]; then
+		printf 'yes'
+	else
+		printf 'no'
+	fi
+}
+EOF
+
+	run --separate-stderr bake Goo=value foo
+
+	assert_success
+	assert_line -n 0 'yes'
+}
+
+@test "lowercase prefix succeeds 2" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() {
+	if [ "$var_goo" = 'value' ]; then
+		printf 'yes'
+	else
+		printf 'no'
+	fi
+}
+EOF
+
+	run --separate-stderr bake goo=value foo
+
+	assert_success
+	assert_line -n 0 'yes'
 }
 
 @test "works with spaces" {
