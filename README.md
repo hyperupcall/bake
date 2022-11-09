@@ -99,7 +99,7 @@ Coming soon...
 
 ## Manual
 
-WARNING: Don't use `main` branch just yet - be sure to switch to latest release!!
+WARNING: Manual is ONLY available on `main` branch and is NOT RELEASE-READY!
 
 ```sh
 git clone 'https://github.com/hyperupcall/bake' ~/.bake

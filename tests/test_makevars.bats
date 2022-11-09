@@ -67,3 +67,14 @@ EOF
 	assert_success
 	assert_line -n 0 'value'
 }
+
+@test "works with spaces" {
+	cat > './Bakefile.sh' <<"EOF"
+	task.foo() { printf '%s\n' "$var_goo"; }
+EOF
+
+	run --separate-stderr bake goo='val ue' foo
+
+	assert_success
+	assert_line -n 0 'val ue'
+}
