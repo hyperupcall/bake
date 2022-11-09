@@ -503,52 +503,50 @@ __bake_parse_args() {
 	fi
 
 	# shellcheck disable=SC1007
-	local __bake_key= __bake_value= __bake_arg=
+	local __bake_key= __bake_value= __bake_arg= __bake_flag_help=
 	for __bake_arg; do case $__bake_arg in
-	-f)
-		BAKE_FILE=$2
-		if [ -z "$BAKE_FILE" ]; then
-			__bake_internal_die "A value was not specified for for flag '-f'"
-		fi
-		((total_shifts += 2))
-		if ! shift 2; then
-			__bake_internal_die 'Failed to shift'
-		fi
-
-		if [ ! -e "$BAKE_FILE" ]; then
-			__bake_internal_die "Specified file '$BAKE_FILE' does not exist"
-		fi
-		if [ ! -f "$BAKE_FILE" ]; then
-			__bake_internal_die "Specified file '$BAKE_FILE' is not actually a file"
-		fi
-		;;
-	-h)
-		local flag_help='yes'
-		if ! shift; then
-			__bake_internal_die 'Failed to shift'
-		fi
-		;;
-	-w)
+	-*)
 		((total_shifts += 1))
 		if ! shift; then
 			__bake_internal_die 'Failed to shift'
 		fi
 
-		if [[ ! -v 'BAKE_INTERNAL_NO_WATCH_OVERRIDE' ]]; then
-			BAKE_INTERNAL_FLAG_WATCH='yes'
-		fi
-		;;
-	-u)
-		((total_shifts += 1))
-		if ! shift; then
-			__bake_internal_die 'Failed to shift'
+		if [[ $__bake_arg == -*f* ]]; then
+			BAKE_FILE=$1
+			if [ -z "$BAKE_FILE" ]; then
+				__bake_internal_die "A value was not specified for for flag '-f'"
+			fi
+			((total_shifts += 1))
+			if ! shift; then
+				__bake_internal_die 'Failed to shift'
+			fi
+
+			if [ ! -e "$BAKE_FILE" ]; then
+				__bake_internal_die "Specified file '$BAKE_FILE' does not exist"
+			fi
+			if [ ! -f "$BAKE_FILE" ]; then
+				__bake_internal_die "Specified file '$BAKE_FILE' is not actually a file"
+			fi
 		fi
 
-		BAKE_INTERNAL_FLAG_UPDATE='yes'
-		;;
-	-v)
-		printf '%s\n' "Version: $__global_bake_version"
-		exit 0
+		if [[ $__bake_arg == -*h* ]]; then
+			__bake_flag_help='yes'
+		fi
+
+		if [[ $__bake_arg == -*u* ]]; then
+			BAKE_INTERNAL_FLAG_UPDATE='yes'
+		fi
+
+		if [[ $__bake_arg == -*v* ]]; then
+			printf '%s\n' "Version: $__global_bake_version"
+			exit 0
+		fi
+
+		if [[ $__bake_arg == -*w* ]]; then
+			if [[ ! -v 'BAKE_INTERNAL_NO_WATCH_OVERRIDE' ]]; then
+				BAKE_INTERNAL_FLAG_WATCH='yes'
+			fi
+		fi
 		;;
 	*=*)
 		# Set variables à la Make
@@ -605,7 +603,8 @@ __bake_parse_args() {
 		BAKE_FILE="$BAKE_ROOT/Bakefile.sh"
 	fi
 
-	if [ "$flag_help" = 'yes' ]; then
+	# This is at the end so 'BAKE_*' variables are set properly
+	if [ "$__bake_flag_help" = 'yes' ]; then
 		cat <<-"EOF"
 		Usage: bake [-h|-v] [-u|-w] [-f <Bakefile>] [var=value ...] <task> [args ...]
 		EOF
