@@ -169,7 +169,7 @@ bake.cfg() {
 # @description Prints stacktrace
 # @internal
 __bake_print_stacktrace() {
-	if [ "$__bake_cfg_stacktrace" = 'on' ]; then
+	if [ "${__bake_config_map[stacktrace]}" = 'on' ]; then
 		if __bake_is_color; then
 			printf '\033[4m%s\033[0m\n' 'Stacktrace:'
 		else
