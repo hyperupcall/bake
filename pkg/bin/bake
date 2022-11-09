@@ -395,9 +395,8 @@ __bake_print_tasks() {
 			task_flags+=("[--${BASH_REMATCH[1]}]")
 		fi
 
-		if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)[[:space:]]*\{[[:space:]]*(#[[:space:]]*(.*))? ]]; then
+		if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)[[:space:]]*\{ ]]; then
 			local matched_function_name="${BASH_REMATCH[2]}"
-			local matched_comment="${BASH_REMATCH[4]}"
 
 			if ((${#task_flags[@]} > 0)); then
 				str+="       ${task_flags[*]}"$'\n'
@@ -406,12 +405,7 @@ __bake_print_tasks() {
 
 			str+="  -> $matched_function_name"
 
-			if [[ -n "$matched_comment" || -n "$task_docstring" ]]; then
-				if [ -n "$matched_comment" ]; then
-					__bake_internal_warn "Adjacent documentation comments are deprecated. Instead, write a comment above 'task.$matched_function_name()' like so: '# doc: $matched_comment'"
-					task_docstring=$matched_comment
-				fi
-
+			if [[ -n "$task_docstring" ]]; then
 				if __bake_is_color; then
 					str+=$' \033[3m'"($task_docstring)"$'\033[0m'
 				else
