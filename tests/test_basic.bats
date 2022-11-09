@@ -65,3 +65,20 @@ EOF
 	assert_success
 	assert [ "$output" = 'WOOF' ]
 }
+
+@test "Variable BAKE_OLDPWD is set" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() {
+	printf '%s\n' "$BAKE_OLDPWD"
+}
+EOF
+
+	mkdir -p './subdir'
+	cd './subdir'
+	local oldpwd="$PWD"
+
+	run --separate-stderr bake -f '../Bakefile.sh' foo
+
+	assert_success
+	assert_line -n 0 "$oldpwd"
+}

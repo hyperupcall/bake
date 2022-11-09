@@ -748,7 +748,7 @@ __bake_entrypoint() {
 	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
 
 	# Argument parsing
-	declare -g BAKE_{ROOT,FILE}= BAKE_INTERNAL_{FLAG_UPDATE,FLAG_WATCH}=
+	declare -g BAKE_{FILE,ROOT}= BAKE_OLDPWD="$PWD" BAKE_INTERNAL_{FLAG_UPDATE,FLAG_WATCH}=
 	__bake_parse_args "$@"
 	if ! shift $REPLY; then
 		__bake_internal_die 'Failed to shift'
