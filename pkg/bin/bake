@@ -846,6 +846,4 @@ __bake_entrypoint() {
 	fi
 }
 
-if [ "$BAKE_INTERNAL_TEST" != 'yes' ]; then
-	__bake_entrypoint "$@"
-fi
+__bake_entrypoint "$@"
