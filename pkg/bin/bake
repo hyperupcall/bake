@@ -64,15 +64,6 @@ bake.info() {
 	fi
 }
 
-# breaking: remove in v2
-# @description Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
-# @arg $@ string Names of variables to check for emptiness
-# @see bake.assert_not_empty
-bake.assert_nonempty() {
-	__bake_internal_warn "Function 'bake.assert_nonempty' is deprecated. Please use 'bake.assert_not_empty' instead"
-	bake.assert_not_empty "$@"
-}
-
 # @description Dies if any of the supplied variables are empty
 # @arg $@ string Names of variables to check for emptiness
 bake.assert_not_empty() {
