@@ -333,8 +333,9 @@ __bake_time_get_total_pretty() {
 
 	if ((BASH_VERSINFO[0] >= 5)); then
 		local timediff=$((EPOCHSECONDS - __bake_global_timestart))
+
 		if ((timediff < 1)); then
-			return
+			return 0
 		fi
 
 		local seconds=$((timediff % 60))
@@ -486,7 +487,7 @@ __bake_print_tasks() {
 # @internal
 __bake_print_big() {
 	if [ "${__bake_config_map[big-print]}" = 'off' ]; then
-		return
+		return 0
 	fi
 
 	if [ "$1" = '--show-time' ]; then
