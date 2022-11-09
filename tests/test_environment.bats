@@ -98,9 +98,7 @@ EOF
 }
 
 @test "Sets key-value pairs like Make" {
-	local f='./Bakefile.sh'
-
-	cat > "$f" <<"EOF"
+	cat > './Bakefile.sh' <<"EOF"
 task.run() {
 	printf '%s\n' "$key1"
 	printf '%s\n' "$key2"
@@ -108,7 +106,7 @@ task.run() {
 }
 EOF
 
-	run --separate-stderr bake -f "$f" key1=value1 key2=value2 key3='mu nu' run
+	run --separate-stderr bake key1=value1 key2=value2 key3='mu nu' run
 
 	assert_success
 	assert [ "${lines[0]}" = 'value1' ]

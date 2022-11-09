@@ -541,8 +541,7 @@ __bake_parse_args() {
 
 	# shellcheck disable=SC1007
 	local __bake_key= __bake_value= __bake_arg=
-	local arg=
-	for arg; do case $arg in
+	for __bake_arg; do case $__bake_arg in
 	-f)
 		BAKE_FILE=$2
 		if [ -z "$BAKE_FILE" ]; then
@@ -592,6 +591,7 @@ __bake_parse_args() {
 		# Set variables à la Make
 		IFS='=' read -r __bake_key __bake_value <<< "$__bake_arg"
 
+		echo aa $__bake_arg >&2
 		# If 'key=value' is passed, create global variable $value
 		declare -g "$__bake_key"
 		local -n __bake_variable="$__bake_key"
@@ -610,8 +610,7 @@ __bake_parse_args() {
 	*)
 		break
 		;;
-	esac done; unset -v arg
-	unset -v __bake_arg
+	esac done; unset -v __bake_arg
 	unset -v __bake_key __bake_value
 	unset -vn __bake_variable
 
@@ -711,9 +710,14 @@ __bake_main() {
 
 			__bake_time_prepare
 
+			set -e
+
+			# Do NOT if task.*; then :; else :; fi
 			task."$__bake_task" "${__bake_args_userflags[@]}"
 
 			__bake_print_big --show-time "<- DONE"
+
+			exit 0
 		else
 			__bake_internal_error "Task '$__bake_task' not found"
 			__bake_print_tasks
