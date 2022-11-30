@@ -81,15 +81,12 @@ To sum it up, _it just works_
 ## Features
 
 - Generates a `./bake` file, for use in CI, etc.
-- `set`, `shopt`, `LANG`, (optionally _stacktrace_) boilerplate all set up
-- Set variables à la Make: `bake key1=value1 key2=value2 docs`
-- POSIX compliant
+- Sensible `set`, `shopt`, and `LANG` [defaults](./docs/features.md#sensible-defaults)
+- Set variables [à la Make](./docs/features.md#make-esque-variable-setting): `bake CC=clang build`
 - Automatically `cd`'s to directory contaning Bakefile
 - Pass `-f` to manually specify Bakefile
 - Dead-simple, miniscule function API (see [api.md](./docs/api.md) for details)
-- Use `init()` function to run code before any task execution
-- Built-in support for [watchexec](https://github.com/watchexec/watchexec)
-- Annotate task with description (or custom watch flags) using comments
+- Built-in [support](./docs/features.md#watchexec-support) for [watchexec](https://github.com/watchexec/watchexec)
 
 ## Installation
 
@@ -103,7 +100,6 @@ WARNING: Manual is ONLY available on `main` branch and is NOT RELEASE-READY!
 
 ```sh
 git clone 'https://github.com/hyperupcall/bake' ~/.bake
-cd ~/.bake
 printf '%s\n' 'PATH="$HOME/.bake/pkg/bin:$PATH"' >> ~/.bashrc
 ```
 

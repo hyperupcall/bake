@@ -75,4 +75,3 @@ Determine if a flag was passed as an argument
 
 * **$1** (string): Flag name to test for
 * **...** (string): Rest of the arguments to search through
-

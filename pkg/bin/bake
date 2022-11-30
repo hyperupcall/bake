@@ -314,16 +314,26 @@ __bake_time_get_total_pretty() {
 # @set object __bake_config_map
 # @internal
 __bake_parse_task_comments() {
-	local task_name="$1"
+	local flag_all=
+	if [ "$1" == '--all' ]; then
+		flag_all='yes'
+		local fn="$2"
+	else
+		local task_name="$1"
+	fi
 
 	local tmp_docstring=
 	local -a tmp_watch_args=()
 	local -A tmp_cfg_map=()
 	local line=
 	while IFS= read -r line || [ -n "$line" ]; do
-		if [[ $line =~ ^[[:space:]]*#[[:space:]](doc|watch|config):[[:space:]]*(.*?)$ ]]; then
+		if [[ $line =~ ^[[:space:]]*#[[:space:]]*(doc|watch|config):[[:space:]]*(.*?)$ ]]; then
 			local comment_category="${BASH_REMATCH[1]}"
 			local comment_content="${BASH_REMATCH[2]}"
+
+			if [[ "$comment_content" == *,* ]]; then
+				__bake_internal_warn "Use spaces as delimiters rather than commas"
+			fi
 
 			if [ "$comment_category" = 'doc' ]; then
 				tmp_docstring=$comment_content
@@ -349,29 +359,34 @@ __bake_parse_task_comments() {
 		if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?(.*?)[[:space:]]*\(\)[[:space:]]*\{ ]]; then
 			local function_name="${BASH_REMATCH[2]}"
 
-			if [ "$function_name" == task."$task_name" ]; then
-				__bake_config_docstring=$tmp_docstring
+			if [ "$flag_all" = 'yes' ]; then
+				"$fn" "$function_name"
+			else
+				if [ "$function_name" == task."$task_name" ]; then
+					__bake_config_docstring=$tmp_docstring
 
-				__bake_config_watchexec_args+=("${tmp_watch_args[@]}")
+					__bake_config_watchexec_args+=("${tmp_watch_args[@]}")
 
-				local key=
-				for key in "${!tmp_cfg_map[@]}"; do
-					__bake_config_map[$key]=${tmp_cfg_map[$key]}
-				done; unset -v key
+					local key=
+					for key in "${!tmp_cfg_map[@]}"; do
+						__bake_config_map[$key]=${tmp_cfg_map[$key]}
+					done; unset -v key
 
-				break
-			elif [ "$function_name" == 'init' ]; then
-				__bake_config_watchexec_args+=("${tmp_watch_args[@]}")
+					break
+				# TODO: only do this if not overriding (init function could be after tasks)
+				elif [ "$function_name" == 'init' ]; then
+					__bake_config_watchexec_args+=("${tmp_watch_args[@]}")
 
-				local key=
-				for key in "${!tmp_cfg_map[@]}"; do
-					__bake_config_map[$key]=${tmp_cfg_map[$key]}
-				done; unset -v key
+					local key=
+					for key in "${!tmp_cfg_map[@]}"; do
+						__bake_config_map[$key]=${tmp_cfg_map[$key]}
+					done; unset -v key
+				fi
+
+				tmp_docstring=
+				tmp_watch_args=()
+				tmp_cfg_map=()
 			fi
-
-			tmp_docstring=
-			tmp_watch_args=()
-			tmp_cfg_map=()
 		fi
 	done < "$BAKE_FILE"; unset -v line
 }
@@ -381,53 +396,21 @@ __bake_parse_task_comments() {
 __bake_print_tasks() {
 	local str=$'Tasks:\n'
 
-	local -a task_flags=()
-	# shellcheck disable=SC1007
-	local line= task_docstring=
-	while IFS= read -r line || [ -n "$line" ]; do
-		# doc
-		if [[ $line =~ ^[[:space:]]*#[[:space:]]doc:[[:space:]](.*?) ]]; then
-			task_docstring=${BASH_REMATCH[1]}
-		fi
-
-		# flag
-		if [[ $line =~ bake\.has_flag[[:space:]][\'\"]?([[:alnum:]]+) ]]; then
-			task_flags+=("[--${BASH_REMATCH[1]}]")
-		fi
-
-		if [[ $line =~ ^([[:space:]]*function[[:space:]]*)?task\.(.*?)\(\)[[:space:]]*\{ ]]; then
-			local matched_function_name="${BASH_REMATCH[2]}"
-
-			if ((${#task_flags[@]} > 0)); then
-				str+="       ${task_flags[*]}"$'\n'
-			fi
-			task_flags=()
-
-			str+="  -> $matched_function_name"
-
-			if [[ -n "$task_docstring" ]]; then
-				if __bake_is_color; then
-					str+=$' \033[3m'"($task_docstring)"$'\033[0m'
-				else
-					str+=" ($task_docstring)"
-				fi
-			fi
-
-			str+=$'\n'
-			task_docstring=
-		fi
-	done < "$BAKE_FILE"; unset -v line
-
-	if [ -z "$str" ]; then
-		if __bake_is_color; then
-			str=$'  \033[3mNo tasks\033[0m\n'
-		else
-			str=$'  No tasks\n'
-		fi
-	fi
+	__bake_parse_task_comments --all '__bake_print_tasks_handler'
 
 	printf '%s' "$str"
 } >&2
+
+# @internal
+__bake_print_tasks_handler() {
+	local fn_name="$1"
+
+	if [[ "$fn_name" =~ task.(.*) ]]; then
+		local task_name="${BASH_REMATCH[1]}"
+
+		str+="  -> $task_name ($tmp_docstring)"$'\n'
+	fi
+}
 
 # @description Prints text that takes up the whole terminal width
 # @arg $1 string Text to print
@@ -593,9 +576,7 @@ __bake_parse_args() {
 
 	# This is at the end so 'BAKE_*' variables are set properly
 	if [ "$__bake_flag_help" = 'yes' ]; then
-		cat <<-"EOF"
-		Usage: bake [-h|-v] [-u|-w] [-f <Bakefile>] [var=value ...] <task> [args ...]
-		EOF
+		printf '%s\n' 'Usage: bake [-h|-v] [-u|-w] [-f <Bakefile>] [var=value ...] <task> [args ...]' >&2
 		__bake_print_tasks
 		exit
 	fi
@@ -629,10 +610,11 @@ __bake_main() {
 	declare -g __bake_config_docstring=
 	declare -ga __bake_config_watchexec_args=()
 	declare -gA __bake_config_map=(
-		[stacktrace]='off'
 		[big-print]='on'
+		[stacktrace]='off'
 	)
 
+	# watchexec
 	if [ "$BAKE_INTERNAL_FLAG_WATCH" = 'yes' ]; then
 		if ! command -v watchexec &>/dev/null; then
 			__bake_internal_die "Executable not found: 'watchexec'"
@@ -642,38 +624,37 @@ __bake_main() {
 
 		# shellcheck disable=SC1007
 		BAKE_INTERNAL_NO_WATCH_OVERRIDE= exec watchexec "${__bake_config_watchexec_args[@]}" "$BAKE_ROOT/bake" -- "${__bake_args_original[@]}"
+	fi
+
+	# start
+	if ! cd -- "$BAKE_ROOT"; then
+		__bake_internal_die "Failed to cd"
+	fi
+
+	# shellcheck disable=SC2097,SC1007,SC1090
+	__bake_task= source "$BAKE_FILE"
+
+	if declare -f task."$__bake_task" >/dev/null 2>&1; then
+		__bake_parse_task_comments "$__bake_task"
+
+		__bake_print_big "-> RUNNING TASK '$__bake_task'"
+
+		if declare -f init >/dev/null 2>&1; then
+			init "$__bake_task"
+		fi
+
+		__bake_time_prepare
+
+		# Do NOT 'if task.*; then :; else handleIt; fi'
+		task."$__bake_task" "${__bake_args_userflags[@]}"
+
+		__bake_print_big --show-time "<- DONE"
+
+		exit 0
 	else
-		if ! cd -- "$BAKE_ROOT"; then
-			__bake_internal_die "Failed to cd"
-		fi
-
-		# shellcheck disable=SC2097,SC1007,SC1090
-		__bake_task= source "$BAKE_FILE"
-
-		if declare -f task."$__bake_task" >/dev/null 2>&1; then
-			__bake_parse_task_comments "$__bake_task"
-
-			__bake_print_big "-> RUNNING TASK '$__bake_task'"
-
-			if declare -f init >/dev/null 2>&1; then
-				init "$__bake_task"
-			fi
-
-			__bake_time_prepare
-
-			set -e
-
-			# Do NOT if task.*; then :; else :; fi
-			task."$__bake_task" "${__bake_args_userflags[@]}"
-
-			__bake_print_big --show-time "<- DONE"
-
-			exit 0
-		else
-			__bake_internal_error "Task '$__bake_task' not found"
-			__bake_print_tasks
-			exit 1
-		fi
+		__bake_internal_error "Task '$__bake_task' not found"
+		__bake_print_tasks
+		exit 1
 	fi
 }
 
@@ -707,7 +688,8 @@ __bake_setup_copy_bakescript() {
 	# If there was an older version, and the versions are different, let the user know
 	if [ -z ${__version_old+x} ]; then
 		# shellcheck disable=SC2154
-		__bake_internal_warn "Updating from version <=1.10.0 to $__version_new"
+		# __bake_internal_warn "Updating from version <=1.10.0 to $__version_new"
+		:
 	else
 		if [ -n "$__version_old" ] && [ "$__version_old" != "$__version_new" ]; then
 			__bake_internal_warn "Updating from version $__version_old to $__version_new"
@@ -738,6 +720,7 @@ __bake_entrypoint() {
 	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
 
 	# Argument parsing
+	# shellcheck disable=SC2034
 	declare -g BAKE_{FILE,ROOT}= BAKE_OLDPWD="$PWD" BAKE_INTERNAL_{FLAG_UPDATE,FLAG_WATCH}=
 	__bake_parse_args "$@"
 	if ! shift $REPLY; then

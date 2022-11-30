@@ -794,7 +794,6 @@ __bake_entrypoint() {
 	if [ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' ] || [[ "$BAKE_INTERNAL_FLAG_UPDATE" != 'yes' && ! -f "$BAKE_ROOT/bake" ]]; then
 		should_exec='yes'
 	fi
-	echo j $should_exec
 
 	# Only update the 'bake' script if we _have to_
 	if [ "$should_copy_bakescript" = 'yes' ]; then
