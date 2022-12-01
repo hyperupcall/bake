@@ -87,6 +87,7 @@ To sum it up, _it just works_
 - Pass `-f` to manually specify Bakefile
 - Dead-simple, miniscule function API (see [api.md](./docs/api.md) for details)
 - Built-in [support](./docs/features.md#watchexec-support) for [watchexec](https://github.com/watchexec/watchexec)
+- Includes bundled versions of [bash-term](https://github.com/hyperupcall/bash-term) v0.6.3 and [bash-core](https://github.com/hyperupcall/bash-core) v0.12.0
 
 ## Installation
 
