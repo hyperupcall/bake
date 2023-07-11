@@ -1,0 +1,4 @@
+pre-commit:
+  commands:
+    generate-docs:
+      run: ./bake docs
