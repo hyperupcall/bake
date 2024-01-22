@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-FileCopyrightText: Copyright 2023 Edwin Kofler and contributors
 # @name Bake
 # @brief Bake: A Bash-based Make alternative
 # @description Bake is a dead-simple task runner used to quickly cobble together shell scripts
