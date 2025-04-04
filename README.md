@@ -101,7 +101,7 @@ WARNING: Manual is ONLY available on `main` branch and is NOT RELEASE-READY!
 
 ```sh
 git clone 'https://github.com/hyperupcall/bake' ~/.bake
-printf '%s\n' 'PATH="$HOME/.bake/pkg/bin:$PATH"' >> ~/.bashrc
+printf '%s\n' 'PATH="$HOME/.bake/bin:$PATH"' >> ~/.bashrc
 ```
 
 ## Basalt

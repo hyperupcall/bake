@@ -8,9 +8,8 @@ description = 'A Bash-based Make alternative'
 
 [run]
 dependencies = ['https://github.com/hyperupcall/bats-all.git@v4.2.0']
-binDirs = ['pkg/bin']
+binDirs = ['bin']
 
 [run.setOptions]
 
 [run.shoptOptions]
-

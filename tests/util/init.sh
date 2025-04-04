@@ -6,7 +6,7 @@ basalt.load 'github.com/hyperupcall/bats-all' 'load.bash'
 
 bats_require_minimum_version 1.7.0
 
-bake() { "$BASALT_PACKAGE_DIR/pkg/bin/bake" "$@"; }
+bake() { "$BASALT_PACKAGE_DIR/bin/bake" "$@"; }
 
 setup_file() {
 	PATH="$BATS_TEST_DIRNAME/bin:$PATH"
