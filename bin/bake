@@ -151,46 +151,6 @@ __bake_trap_err() {
 	exit $error_code
 } >&2
 
-# @description When running a task, ensure that we start in the correct directory
-# @internal
-__bake_trap_debug_fixcd_current_fn=
-__bake_trap_debug_fixcd() {
-	local current_function="${FUNCNAME[1]}"
-
-	if [[ $current_function != "$__bake_trap_debug_fixcd_current_fn" \
-			&& $current_function == task.* ]]; then
-		if ! cd -- "$BAKE_ROOT"; then
-			__bake_internal_die "Failed to cd to \$BAKE_ROOT"
-		fi
-	fi
-
-	__bake_trap_debug_fixcd_current_fn=$current_function
-} >&2
-
-# @description Ensure that the main function is not ran
-# @internal
-__bake_trap_debug_barrier() {
-	local current_function="${FUNCNAME[1]}"
-
-	# We don't check for '__bake_entrypoint', since
-	if [ "$current_function" = '__bake_main' ]; then
-		# shellcheck disable=SC2034
-		local __version_old="$__global_bake_version"
-
-		trap - DEBUG
-		unset -v BAKE_INTERNAL_ONLY_VERSION
-		unset -v BAKE_INTERNAL_CAN_SOURCE
-
-		__bake_setup_copy_bakescript
-		if [ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' ]; then
-			exit 0
-		else
-			# shellcheck disable=SC2154
-			exec "$BAKE_ROOT/bake" "${__bake_global_backup_args[@]}"
-		fi
-	fi
-}
-
 # @description Test whether color should be outputed
 # @exitcode 0 if should print color
 # @exitcode 1 if should not print color
@@ -223,17 +183,6 @@ __bake_is_color() {
 # @arg $1 string Text to print
 # @internal
 __bake_internal_die() {
-	__bake_internal_error "$1. Exiting"
-	exit 1
-}
-
-# @description Calls `__bake_internal_error` and terminates with code 1. Before
-# doing so, it closes with "<- ERROR" big text
-# @arg $1 string Text to print
-# @internal
-__bake_internal_bigdie() {
-	__bake_print_big '<- ERROR'
-
 	__bake_internal_error "$1. Exiting"
 	exit 1
 }
@@ -658,30 +607,6 @@ __bake_main() {
 		__bake_print_tasks
 		exit 1
 	fi
-}
-
-
-# @description Tests if the './bake' file should be replaced. It should only
-# be replaced if we're not in an interactive Git context
-# @internal
-__bake_setup_should_replace_bakescript() {
-	local dir="$BAKE_ROOT"
-	while [ ! -d "$dir/.git" ] && [ -n "$dir" ]; do
-		dir=${dir%/*}
-	done
-
-	if [ -d "$dir/.git" ]; then
-		# ref: https://github.com/git/git/blob/d420dda0576340909c3faff364cfbd1485f70376/wt-status.c#L1749
-		# ref2: https://github.com/Byron/gitoxide/blob/375051fa97d79f95fa7179b536e616c4aefd88e2/git-repository/src/repository/state.rs#L8
-		local file=
-		for file in {rebase-apply/applying,rebase-apply/rebasing,rebase-apply,rebase-merge/interactive,rebase-merge,CHERRY_PICK_HEAD,MERGE_HEAD,BISECT_LOG,REVERT_HEAD}; do
-			if [ -f "$dir/.git/$file" ]; then
-				return 1
-			fi
-		done; unset -v file
-	fi
-
-	return 0
 }
 
 # @description Copy 'bake' script to current context
