@@ -159,7 +159,7 @@ EOF
 	assert_line -n 1 -p '2: off'
 }
 
-@test "comment config: works with value 3" {
+@test "comment config: works with value 3.1" { # TODO merge
 	cat > './Bakefile.sh' <<"EOF"
 #config: big-print=on
 init() {
@@ -187,7 +187,30 @@ EOF
 	assert_success
 	assert_line -n 0 -p '1: on'
 	assert_line -n 1 -p '2: off'
+}
 
+@test "comment config: works with value 3.2" {
+	cat > './Bakefile.sh' <<"EOF"
+#config: big-print=on
+init() {
+	:
+}
+
+#config: stacktrace=off
+task.foo() {
+	util.print
+}
+
+#config: big-print=off stacktrace=off
+task.bar() {
+	util.print
+}
+
+util.print() {
+	printf '%s\n' "1: ${__bake_config_map[big-print]}"
+	printf '%s\n' "2: ${__bake_config_map[stacktrace]}"
+}
+EOF
 
 	run --separate-stderr bake bar
 

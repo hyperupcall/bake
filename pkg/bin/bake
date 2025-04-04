@@ -700,7 +700,7 @@ __bake_setup_copy_bakescript() {
 
 	# shellcheck disable=SC2154
 	if ! cp -f "$0" "$BAKE_ROOT/bake"; then
-		__bake_internal_die "Failed to copy 'bakeScript.sh'"
+		__bake_internal_die "Failed to copy bake script"
 	fi
 
 	if ! chmod +x "$BAKE_ROOT/bake"; then
@@ -730,52 +730,11 @@ __bake_entrypoint() {
 	fi
 	declare -g BAKE_INTERNAL_HAS_PARSED_ARGS='yes'
 
-	local should_copy_bakescript='no'
 	if [[ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' || ! -f "$BAKE_ROOT/bake" ]]; then
-		should_copy_bakescript='yes'
-	fi
-
-	local should_exec='no'
-	if [ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' ] || [[ "$BAKE_INTERNAL_FLAG_UPDATE" != 'yes' && ! -f "$BAKE_ROOT/bake" ]]; then
-		should_exec='yes'
-	fi
-
-	# Only update the 'bake' script if we _have to_
-	if [ "$should_copy_bakescript" = 'yes' ]; then
-		# When we pass '-u', there is a potential for infinite loops. After updating the
-		# file and 'exec'ing into it (done after this if-then block), the '-u' parameter will
-		# still be passed, but we don't want to update it again.
 		__bake_setup_copy_bakescript
-
-		# local __version_new="$__global_bake_version"
-
-		# We check if a 'bake' script already exists, so we can the "current" (pre-replacement) version, and tell
-		# the user if the script is going to be updated. This requires some tricks, as mentioned below
-		# if [ -f "$BAKE_ROOT/bake" ]; then
-		# 	declare -ag __bake_global_backup_args=("$@")
-
-		# These traps are required because 'BAKE_INTERNAL_ONLY_VERSION' is a recent addition. With older versions
-		# that don't test for it, the source will run through the whole script, including the __bake_main
-		# function (this is also why BAKE_INTERNAL_CAN_SOURCE=yes - so this feature doesn't cause older scripts
-		# to just error and die). We use these traps to ensure the script does _not_ run __bake_main. Just "letting
-		# it run" would make things more simple, but that would mean that we will have to run 'bake' twice to perform
-		# the update, instead of just once (and it would not be guaranteed, since it updates at the end). Also, doing
-		# this would mean values like "$0" are not what would be expected.
-		# 	trap '__bake_trap_debug_barrier' DEBUG
-		# 	# shellcheck disable=SC1091
-		# 	BAKE_INTERNAL_ONLY_VERSION='yes' BAKE_INTERNAL_CAN_SOURCE='yes' source "$BAKE_ROOT/bake"
-		# 	trap - DEBUG
-		# 	__version_old=$__global_bake_version
-		# 	unset -v __bake_global_backup_args
-		# 	# TODO: re-source $0 so correct functions are in scope
-		# fi
 		__bake_main "$@"
-	fi
-
-	if [ "$should_exec" = 'yes' ]; then
-		exec "$BAKE_ROOT/bake" "$@"
 	else
-		__bake_main "$@"
+		exec "$BAKE_ROOT/bake" "$@"
 	fi
 }
 
