@@ -2,7 +2,39 @@
 
 load './util/init.sh'
 
-@test "uppercase unprefix succeeds" {
+@test "Passing -f cd to correct directory" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() {
+	printf '%s\n' "$PWD"
+}
+EOF
+
+	local pwd="$PWD"
+
+	run --separate-stderr bake foo
+
+	assert_success
+	assert_line -n 0 "$pwd"
+}
+
+@test "Omitting -f cd to correct directory" {
+	cat > './Bakefile.sh' <<"EOF"
+task.run() {
+	printf '%s\n' "$PWD"
+}
+EOF
+
+	local old_pwd="$PWD"
+	mkdir -p './subdir'
+	cd './subdir'
+
+	run --separate-stderr bake -f '../Bakefile.sh' run
+
+	assert_success
+	assert_line -n 0 "$old_pwd"
+}
+
+@test "Argument GOO=value sets GOO variable" {
 	cat > './Bakefile.sh' <<"EOF"
 task.foo() {
 	if [ "$GOO" = 'value' ]; then
@@ -19,7 +51,7 @@ EOF
 	assert_line -n 0 'yes'
 }
 
-@test "uppercase prefix fails" {
+@test "Argument GOO=value does not set var_GOO variable" {
 cat > './Bakefile.sh' <<"EOF"
 task.foo() {
 	if [ "$var_GOO" = 'value' ]; then
@@ -36,7 +68,7 @@ EOF
 	assert_line -n 0 'no'
 }
 
-@test "lowercase unprefix fails" {
+@test "Argument Goo=value does not create Goo variable" {
 	cat > './Bakefile.sh' <<"EOF"
 task.foo() {
 	if [ "$Goo" = 'value' ]; then
@@ -53,24 +85,7 @@ EOF
 	assert_line -n 0 'no'
 }
 
-@test "lowercase unprefix fails 2" {
-	cat > './Bakefile.sh' <<"EOF"
-task.foo() {
-	if [ "$goo" = 'value' ]; then
-		printf 'yes'
-	else
-		printf 'no'
-	fi
-}
-EOF
-
-	run --separate-stderr bake goo=value foo
-
-	assert_success
-	assert_line -n 0 'no'
-}
-
-@test "lowercase prefix succeeds" {
+@test "Argument Goo=value creates var_Goo variable" {
 	cat > './Bakefile.sh' <<"EOF"
 task.foo() {
 	if [ "$var_Goo" = 'value' ]; then
@@ -87,7 +102,24 @@ EOF
 	assert_line -n 0 'yes'
 }
 
-@test "lowercase prefix succeeds 2" {
+@test "Argument goo=value does not create goo variable" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() {
+	if [ "$goo" = 'value' ]; then
+		printf 'yes'
+	else
+		printf 'no'
+	fi
+}
+EOF
+
+	run --separate-stderr bake goo=value foo
+
+	assert_success
+	assert_line -n 0 'no'
+}
+
+@test "Argument goo=value creates var_goo variable" {
 	cat > './Bakefile.sh' <<"EOF"
 task.foo() {
 	if [ "$var_goo" = 'value' ]; then
@@ -104,7 +136,7 @@ EOF
 	assert_line -n 0 'yes'
 }
 
-@test "works with spaces" {
+@test "Variable values with whitespace work variable" {
 	cat > './Bakefile.sh' <<"EOF"
 	task.foo() { printf '%s\n' "$var_goo"; }
 EOF

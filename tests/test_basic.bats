@@ -2,7 +2,43 @@
 
 load './util/init.sh'
 
-@test "Sets correct options" {
+@test "Ensure local 'bake' is copied" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() { :; }
+EOF
+
+	run bake foo
+	assert_success
+	assert [ -f './bake' ]
+}
+
+
+@test "Works as intended" {
+cat > './Bakefile.sh' <<"EOF"
+task.print() {
+	printf '%s\n' 'rainbows'
+}
+EOF
+	cp "$BATS_TEST_DIRNAME/../bin/bake" ./bake
+
+	run --separate-stderr ./bake print
+	assert_success
+	assert_output 'rainbows'
+}
+
+@test "Works as intended 2" {
+cat > './Bakefile.sh' <<"EOF"
+task.print() {
+	printf '%s\n' 'rainbows'
+}
+EOF
+
+	run --separate-stderr "$BATS_TEST_DIRNAME/../bin/bake" print
+	assert_success
+	assert_output 'rainbows'
+}
+
+@test "Sets correct shell options" {
 	cat > './Bakefile.sh' <<"EOF"
 task.foo() {
 	p() { printf '%s\n' "$1"; }
@@ -35,7 +71,7 @@ EOF
 	done <<< "$output"; unset -v line
 }
 
-@test "Runs init before all" {
+@test "Runs init first" {
 	cat > './Bakefile.sh' <<"EOF"
 init() {
 	printf '%s\n' 'flava'
@@ -66,19 +102,27 @@ EOF
 	assert [ "$output" = 'WOOF' ]
 }
 
-@test "Variable BAKE_OLDPWD is set" {
+@test "Correct error code on return" {
 	cat > './Bakefile.sh' <<"EOF"
 task.foo() {
-	printf '%s\n' "$BAKE_OLDPWD"
+	return 99
 }
 EOF
 
-	mkdir -p './subdir'
-	cd './subdir'
-	local oldpwd="$PWD"
+	run bake foo
 
-	run --separate-stderr bake -f '../Bakefile.sh' foo
+	assert_failure
+	[ "$status" -eq 99 ]
+}
 
-	assert_success
-	assert_line -n 0 "$oldpwd"
+@test "Correct error code on exit" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() {
+	exit 99
+}
+EOF
+
+	run bake foo
+
+	[ "$status" -eq 99 ]
 }

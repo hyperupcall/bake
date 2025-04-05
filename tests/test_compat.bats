@@ -6,7 +6,7 @@ declare -g output_v1_11_2="-> RUNNING TASK 'apple' ================
 pie
 <- DONE ================================"
 
-@test "v1.11.2 directly works" {
+@test "v1.11.2 direct run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
@@ -18,7 +18,7 @@ EOF
 	assert_output "$output_v1_11_2"
 }
 
-@test "v1.11.2 indirectly works" {
+@test "v1.11.2 indirect run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
@@ -34,7 +34,7 @@ declare -g output_v1_11_1="-> RUNNING TASK 'apple' ================
 pie
 <- DONE ===== (time: ) ================="
 
-@test "v1.11.1 directly works" {
+@test "v1.11.1 direct run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
@@ -46,7 +46,7 @@ EOF
 	assert_output "$output_v1_11_1"
 }
 
-@test "v1.11.1 indirectly works" {
+@test "v1.11.1 indirect run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
@@ -62,7 +62,7 @@ declare -g output_v1_11_0="-> RUNNING TASK 'apple' ================
 pie
 <- DONE ===== (time: ) ================="
 
-@test "v1.11.0 directly works" {
+@test "v1.11.0 direct run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
@@ -74,7 +74,7 @@ EOF
 	assert_output "$output_v1_11_0"
 }
 
-@test "v1.11.0 indirectly works" {
+@test "v1.11.0 indirect run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
@@ -90,7 +90,7 @@ declare -g output_v1_10_1="-> RUNNING TASK 'apple' ================
 pie
 <- DONE ================================"
 
-@test "v1.10.1 directly works" {
+@test "v1.10.1 direct run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
@@ -102,7 +102,7 @@ EOF
 	assert_output "$output_v1_10_1"
 }
 
-@test "v1.10.1 indirectly works" {
+@test "v1.10.1 indirect run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
@@ -118,7 +118,7 @@ declare -g output_v1_9_0="-> RUNNING TASK 'apple' ================
 pie
 <- DONE ================================"
 
-@test "v1.9.0 directly works" {
+@test "v1.9.0 direct run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
@@ -130,7 +130,7 @@ EOF
 	assert_output "$output_v1_9_0"
 }
 
-@test "v1.9.0 indirectly works" {
+@test "v1.9.0 indirect run works" {
 cat > './Bakefile.sh' <<"EOF"
 task.apple() {
 	printf '%s\n' 'pie'
