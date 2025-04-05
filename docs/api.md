@@ -22,7 +22,6 @@ Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 * [bake.die](#bakedie)
 * [bake.warn](#bakewarn)
 * [bake.info](#bakeinfo)
-* [bake.assert_nonempty](#bake.assert_nonempty)
 * [bake.assert_not_empty](#bakeassert_not_empty)
 * [bake.assert_cmd](#bakeassert_cmd)
 * [bake.has_flag](#bakehas_flag)
@@ -51,18 +50,6 @@ Prints `$1` formatted as information to standard output
 #### Arguments
 
 * **$1** (string): Text to print
-
-### bake.assert_nonempty
-
-Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
-
-#### Arguments
-
-* **...** (string): Names of variables to check for emptiness
-
-#### See also
-
-* [bake.assert_not_empty](#bakeassert_not_empty)
 
 ### bake.assert_not_empty
 
