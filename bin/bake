@@ -17,7 +17,7 @@
 #
 # Learn more about it [on GitHub](https://github.com/hyperupcall/bake)
 
-__global_bake_version='1.11.2+dev'
+__global_bake_version='2.0.0-rc1+dev'
 
 # Return early if only the version is needed. This improves performance
 if [ "$BAKE_INTERNAL_ONLY_VERSION" = 'yes' ]; then
