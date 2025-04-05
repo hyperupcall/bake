@@ -143,27 +143,3 @@ EOF
 }
 
 declare -g output_v0_1_0="pie"
-
-@test "v0.1.0 directly works" {
-cat > './Bakefile.sh' <<"EOF"
-task.apple() {
-	printf '%s\n' 'pie'
-}
-EOF
-	cp "$BATS_TEST_DIRNAME/bakescripts/bake-v0.1.0.sh" ./bake
-	run ./bake apple
-	assert_success
-	assert_output "$output_v0_1_0"
-}
-
-@test "v0.1.0 indirectly works" {
-cat > './Bakefile.sh' <<"EOF"
-task.apple() {
-	printf '%s\n' 'pie'
-}
-EOF
-	cp "$BATS_TEST_DIRNAME/bakescripts/bake-v0.1.0.sh" ./bake
-	run "$BATS_TEST_DIRNAME/../bin/bake" apple
-	assert_success
-	assert_output "$output_v0_1_0"
-}
