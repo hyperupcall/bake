@@ -51,6 +51,18 @@ Prints `$1` formatted as information to standard output
 
 * **$1** (string): Text to print
 
+### bake.assert_nonempty
+
+Dies if any of the supplied variables are empty. Deprecated in favor of 'bake.assert_not_empty'
+
+#### Arguments
+
+* **...** (string): Names of variables to check for emptiness
+
+#### See also
+
+* [bake.assert_not_empty](#bakeassert_not_empty)
+
 ### bake.assert_not_empty
 
 Dies if any of the supplied variables are empty
