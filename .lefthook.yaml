@@ -1,4 +1,7 @@
 pre-commit:
+  parallel: true
   commands:
     generate-docs:
       run: ./bake docs
+    test:
+      run: bats ./tests
