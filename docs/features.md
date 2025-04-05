@@ -83,3 +83,7 @@ task.buld() {
 ```sh
 bake -w build
 ```
+
+## Version Consistency
+
+If the version of `./bake` and, say, `~/bin/bake` are different, `bake` will always execute the local version for consistency. Pass `-u` to update `./bake` with the current version.

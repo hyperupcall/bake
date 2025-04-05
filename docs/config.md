@@ -2,15 +2,15 @@
 
 ### `doc`
 
-Documentation for `-h`
+Set a small documentation string that is printed when `-h` is passed.
 
 ### `watch`
 
-Flags for `-w`
+Set arguments that are passed to `watchexec` when `-w` is passed.
 
 ### `config`
 
-General options:
+General options that change the behavior of `bake`. They include:
 
 #### `stacktrace`
 
@@ -28,4 +28,4 @@ This is enabled by default.
 
 ## `watchexec` integration
 
-When the `-w` flag is passed, we wrap `bake` in watchexec
+When the `-w` flag is passed, we wrap `bake` in watchexec.
