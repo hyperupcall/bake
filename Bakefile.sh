@@ -1,9 +1,9 @@
 # shellcheck shell=bash
 
-# doc: This is a stub for a function that, in general, performs
-# doc: the task of initialization. Initialization is important.
-# doc: build docs
-# watch: -c
+#doc: This is a stub for a function that, in general, performs
+#doc: the task of initialization. Initialization is important.
+#doc: build docs
+#watch: -c
 init() {
 	:
 }
@@ -11,7 +11,7 @@ init() {
 #doc: This builds documentation and writes it do a particular
 #doc: file. It also performs other functions.
 #watch: --ignore **/docs/*
-#config: big-print=off
+#config: big-print=on
 task.docs() {
 	shdoc < './bin/bake' > './docs/api.md'
 }

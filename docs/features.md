@@ -24,17 +24,23 @@ task.run() {
 }
 ```
 
+## Automatic `cd`
+
+Typically, shell sripts contain code for changing to the main project directory:
+
+```bash
+cd "$(dirname "$0")/.."
+```
+
+`bake` automatically handles this for you, changing the directory in tasks to the directory that contains `Bakefile.sh`.
+
 ## Environment Variables
 
 Bash sets various environment variables
 
 - `BAKE_FILE`: the absolute path of the `Bakefile.sh` being used for running tasks.
 - `BAKE_ROOT`: the absolute path of the directory containing `BAKE_FILE`. This has the same value as `PWD` at the start of a task.
-- `BAKE_OLDPWD`: the original directory where bake was invoced from.
-
-## Miscellaneous Improvements
-
-- A `bake` script is always created (and optionally updated) adjacent to `Bakefile.sh`. This allows the
+- `BAKE_OLDPWD`: the original directory where bake was invoked from.
 
 ## Config Comments
 
@@ -48,10 +54,6 @@ task.docs() {
 ```
 
 If no value is given, it defaults to `on`. There are several keys:
-
-## `cd`'s to directory
-
-As tite
 
 ## Big prints
 

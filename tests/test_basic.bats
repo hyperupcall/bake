@@ -2,8 +2,8 @@
 
 load './util/init.sh'
 
-@test "Runs the correct task If invoked as './bake'" {
-cat > './Bakefile.sh' <<"EOF"
+@test "Runs the correct task if invoked as './bake'" {
+	cat > './Bakefile.sh' <<"EOF"
 task.print() {
 	printf '%s\n' 'rainbows'
 }
@@ -15,8 +15,8 @@ EOF
 	assert_output 'rainbows'
 }
 
-@test "Runs the correct task If invoked as 'bake'" {
-cat > './Bakefile.sh' <<"EOF"
+@test "Runs the correct task if invoked as 'bake'" {
+	cat > './Bakefile.sh' <<"EOF"
 task.print() {
 	printf '%s\n' 'rainbows'
 }
