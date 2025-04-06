@@ -162,11 +162,12 @@ __bake_is_color() {
 		return 1
 	fi
 
-	if [[ $FORCE_COLOR == @(1|2|3) ]]; then
-		return 0
-	elif [[ $FORCE_COLOR == '0' ]]; then
-		return 1
-	fi
+	case $FORCE_COLOR in
+	1|2|3)
+		return 0 ;;
+	0)
+		return 1 ;;
+	esac
 
 	if [ "$TERM" = 'dumb' ]; then
 		return 1
