@@ -609,30 +609,6 @@ __bake_main() {
 	fi
 }
 
-# @description Copy 'bake' script to current context
-# @internal
-__bake_setup_copy_bakescript() {
-	# If there was an older version, and the versions are different, let the user know
-	if [ -z ${__version_old+x} ]; then
-		# shellcheck disable=SC2154
-		# __bake_internal_warn "Updating from version <=1.10.0 to $__version_new"
-		:
-	else
-		if [ -n "$__version_old" ] && [ "$__version_old" != "$__version_new" ]; then
-			__bake_internal_warn "Updating from version $__version_old to $__version_new"
-		fi
-	fi
-
-	# shellcheck disable=SC2154
-	if ! cp -f "$0" "$BAKE_ROOT/bake"; then
-		__bake_internal_die "Failed to copy bake script"
-	fi
-
-	if ! chmod +x "$BAKE_ROOT/bake"; then
-		__bake_internal_die "Failed to 'chmod +x' bake script" >&2
-	fi
-}
-
 __bake_entrypoint() {
 	# Environment boilerplate
 	set -ETeo pipefail
@@ -655,10 +631,31 @@ __bake_entrypoint() {
 	fi
 	declare -g BAKE_INTERNAL_HAS_PARSED_ARGS='yes'
 
-	if [[ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' || ! -f "$BAKE_ROOT/bake" ]]; then
-		__bake_setup_copy_bakescript
+	local __bake_script=
+	__bake_script="$(CDPATH= cd -- "$(dirname "$0")" && pwd -P)/bake"
+
+	# If invoking like "./bake" (or "../bake").
+	if [ "$__bake_script" = "$BAKE_ROOT/bake" ]; then
+		if [ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' ]; then
+			__bake_internal_die "Refusing to copy itself"
+		fi
+
 		__bake_main "$@"
+	# If invoking like "~/bin/bake".
 	else
+		if [[ "$BAKE_INTERNAL_FLAG_UPDATE" = 'yes' || ! -f "$BAKE_ROOT/bake" ]]; then
+			if ! cp -f "$__bake_script" "$BAKE_ROOT/bake"; then
+				__bake_internal_die "Failed to copy bake script"
+			fi
+
+			if ! chmod +x "$BAKE_ROOT/bake"; then
+				__bake_internal_die "Failed to 'chmod +x' bake script" >&2
+			fi
+
+			__bake_main "$@"
+			return
+		fi
+
 		exec "$BAKE_ROOT/bake" "$@"
 	fi
 }

@@ -2,18 +2,7 @@
 
 load './util/init.sh'
 
-@test "Ensure local 'bake' is copied" {
-	cat > './Bakefile.sh' <<"EOF"
-task.foo() { :; }
-EOF
-
-	run bake foo
-	assert_success
-	assert [ -f './bake' ]
-}
-
-
-@test "Works as intended" {
+@test "Runs the correct task If invoked as './bake'" {
 cat > './Bakefile.sh' <<"EOF"
 task.print() {
 	printf '%s\n' 'rainbows'
@@ -26,16 +15,86 @@ EOF
 	assert_output 'rainbows'
 }
 
-@test "Works as intended 2" {
+@test "Runs the correct task If invoked as 'bake'" {
 cat > './Bakefile.sh' <<"EOF"
 task.print() {
 	printf '%s\n' 'rainbows'
 }
 EOF
 
-	run --separate-stderr "$BATS_TEST_DIRNAME/../bin/bake" print
+	run --separate-stderr bake print
 	assert_success
 	assert_output 'rainbows'
+}
+
+@test "If invoking as './bake', it works if './bake' is a symlink" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() { :; }
+EOF
+	ln -s "$BATS_TEST_DIRNAME/../bin/bake" ./bake
+
+	run ./bake foo
+	assert_success
+}
+
+@test "If invoking as './bake', script not copied if '-u' is passed" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() { :; }
+EOF
+	cp "$BATS_TEST_DIRNAME/../bin/bake" ./bake
+
+	run ./bake -u foo
+	assert_failure
+	assert_output -p 'Refusing to copy itself'
+}
+
+@test "If invoking as '../bake', script not copied if '-u' is passed" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() { :; }
+EOF
+	cp "$BATS_TEST_DIRNAME/../bin/bake" ./bake
+
+	mkdir ./subdir
+	cd ./subdir
+	run ../bake -u foo
+	assert_failure
+	assert_output -p 'Refusing to copy itself'
+}
+
+@test "If invoking as 'bake', script copied if './bake' does not exist" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() { :; }
+EOF
+
+	run bake foo
+	assert_success
+	assert [ -f './bake' ]
+}
+
+@test "If invoking as 'bake', script copied if '-u' is passed" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() { :; }
+EOF
+	touch ./bake
+
+	run bake -u foo
+	assert_success
+	assert [ -s './bake' ]
+}
+
+@test "If invoking as 'bake', script not copied if '-u' is not passed" {
+	cat > './Bakefile.sh' <<"EOF"
+task.foo() { :; }
+EOF
+	local line=#${RANDOM}-${RANDOM}-${RANDOM}
+	printf '%s\n' "#!/usr/bin/env bash" > ./bake
+	printf '%s\n' "$line" >> ./bake
+	cat "$BATS_TEST_DIRNAME/../bin/bake" >> ./bake
+	chmod +x ./bake
+
+	run bake foo
+	assert_success
+	grep -q "$line" ./bake
 }
 
 @test "Sets correct shell options" {

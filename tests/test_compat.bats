@@ -25,7 +25,7 @@ task.apple() {
 }
 EOF
 	cp "$BATS_TEST_DIRNAME/bakescripts/bake-v1.11.2.sh" ./bake
-	run "$BATS_TEST_DIRNAME/../bin/bake" apple
+	run bake apple
 	assert_success
 	assert_output "$output_v1_11_2"
 }
@@ -53,7 +53,7 @@ task.apple() {
 }
 EOF
 	cp "$BATS_TEST_DIRNAME/bakescripts/bake-v1.11.1.sh" ./bake
-	run "$BATS_TEST_DIRNAME/../bin/bake" apple
+	run bake apple
 	assert_success
 	assert_output "$output_v1_11_1"
 }
@@ -81,7 +81,7 @@ task.apple() {
 }
 EOF
 	cp "$BATS_TEST_DIRNAME/bakescripts/bake-v1.11.0.sh" ./bake
-	run "$BATS_TEST_DIRNAME/../bin/bake" apple
+	run bake apple
 	assert_success
 	assert_output "$output_v1_11_0"
 }
@@ -109,7 +109,7 @@ task.apple() {
 }
 EOF
 	cp "$BATS_TEST_DIRNAME/bakescripts/bake-v1.10.1.sh" ./bake
-	run "$BATS_TEST_DIRNAME/../bin/bake" apple
+	run bake apple
 	assert_success
 	assert_output "$output_v1_10_1"
 }
@@ -137,7 +137,7 @@ task.apple() {
 }
 EOF
 	cp "$BATS_TEST_DIRNAME/bakescripts/bake-v1.9.0.sh" ./bake
-	NO_COLOR= run "$BATS_TEST_DIRNAME/../bin/bake" apple
+	NO_COLOR= run bake apple
 	assert_success
 	assert_output "$output_v1_9_0"
 }
