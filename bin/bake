@@ -250,7 +250,7 @@ __bake_time_get_total_pretty() {
 			seconds=$((seconds - 1))
 		fi
 
-		if ((seconds < 15)); then
+		if ((seconds_diff < 15)); then
 			if ((${#useconds} > 3)); then
 				REPLY="${seconds}s ${useconds::-3}ms"
 			else
