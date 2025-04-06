@@ -296,7 +296,7 @@ __bake_parse_task_comments() {
 			local comment_category="${BASH_REMATCH[1]}"
 			local comment_content="${BASH_REMATCH[2]}"
 
-			if [[ "$comment_content" == *,* ]]; then
+			if [[ $comment_category == 'config' && $comment_content == *,* ]]; then
 				__bake_internal_warn "Use spaces as delimiters rather than commas"
 			fi
 
