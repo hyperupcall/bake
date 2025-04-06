@@ -27,6 +27,39 @@ EOF
 	assert_output 'rainbows'
 }
 
+@test "Runs the correct task if Bakefile is adjacent to bake" {
+	mkdir -p .hidden
+	cat > './.hidden/Bakefile.sh' <<"EOF"
+task.print() {
+	printf '%s\n' 'rainbows'
+}
+EOF
+	cp "$BATS_TEST_DIRNAME/../bin/bake" ./.hidden/bake
+
+	run --separate-stderr ./.hidden/bake print
+	assert_success
+	assert_output 'rainbows'
+}
+
+@test "Runs the correct task if Bakefile is adjacent to bake and in cwd" {
+	mkdir -p .hidden
+	cat > './.hidden/Bakefile.sh' <<"EOF"
+task.print() {
+	printf '%s\n' 'rainbows'
+}
+EOF
+	cat > './Bakefile.sh' <<"EOF"
+task.print() {
+	printf '%s\n' 'not-rainbows'
+}
+EOF
+	cp "$BATS_TEST_DIRNAME/../bin/bake" ./.hidden/bake
+
+	run --separate-stderr ./.hidden/bake print
+	assert_success
+	assert_output 'not-rainbows'
+}
+
 @test "If invoking as './bake', it works if './bake' is a symlink" {
 	cat > './Bakefile.sh' <<"EOF"
 task.foo() { :; }

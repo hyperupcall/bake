@@ -521,7 +521,7 @@ __bake_parse_args() {
 		)
 		BAKE_FILE="$BAKE_ROOT/${BAKE_FILE##*/}"
 	else
-		if ! BAKE_ROOT=$(
+		if BAKE_ROOT=$(
 			while [ ! -f './Bakefile.sh' ] && [ "$PWD" != / ]; do
 				if ! cd ..; then
 					exit 1
@@ -534,9 +534,13 @@ __bake_parse_args() {
 
 			printf '%s' "$PWD"
 		); then
+			BAKE_FILE="$BAKE_ROOT/Bakefile.sh"
+		elif [ -f "${__bake_script%/*}/Bakefile.sh" ]; then
+			BAKE_FILE="${__bake_script%/*}/Bakefile.sh"
+			BAKE_ROOT="${__bake_script%/*}"
+		else
 			__bake_internal_die "Failed to find 'Bakefile.sh'"
 		fi
-		BAKE_FILE="$BAKE_ROOT/Bakefile.sh"
 	fi
 
 	# This is at the end so 'BAKE_*' variables are set properly
@@ -633,6 +637,10 @@ __bake_entrypoint() {
 	trap '__bake_trap_err' 'ERR'
 	trap ':' 'INT' # Ensure Ctrl-C ends up printing <- ERROR ==== etc.
 
+	local __bake_script=
+	# shellcheck disable=SC1007
+	__bake_script="$(CDPATH= cd -- "$(dirname "$0")" && printf '%s\n' "$PWD")/bake"
+
 	# Argument parsing
 	# shellcheck disable=SC2034
 	declare -g BAKE_{FILE,ROOT}= BAKE_OLDPWD="$PWD" BAKE_INTERNAL_{FLAG_UPDATE,FLAG_WATCH}=
@@ -641,9 +649,6 @@ __bake_entrypoint() {
 		__bake_internal_die 'Failed to shift'
 	fi
 	declare -g BAKE_INTERNAL_HAS_PARSED_ARGS='yes'
-
-	local __bake_script=
-	__bake_script="$(CDPATH= cd -- "$(dirname "$0")" && pwd -P)/bake"
 
 	# If invoking like "./bake" (or "../bake").
 	if [ "$__bake_script" = "$BAKE_ROOT/bake" ]; then
