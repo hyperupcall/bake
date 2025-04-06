@@ -226,7 +226,7 @@ __bake_error() {
 # @internal
 __bake_time_prepare() {
 	if ((BASH_VERSINFO[0] >= 5)); then
-		__bake_global_timestart=$EPOCHSECONDS
+		__bake_global_timestart=$EPOCHREALTIME
 	fi
 }
 
@@ -235,24 +235,37 @@ __bake_time_prepare() {
 # @internal
 __bake_time_get_total_pretty() {
 	unset -v REPLY; REPLY=
+	if [ -z "$__bake_global_timestart" ]; then
+		return 0
+	fi
 
 	if ((BASH_VERSINFO[0] >= 5)); then
-		local timediff=$((EPOCHSECONDS - __bake_global_timestart))
+		local cur_time=$EPOCHREALTIME
+		local seconds_diff=$((${cur_time%.*} - ${__bake_global_timestart%.*}))
+		local seconds=$((seconds_diff % 60))
 
-		if ((timediff < 1)); then
+		local useconds=$((10#${cur_time#*.} - 10#${__bake_global_timestart#*.}))
+		if ((useconds < 0)); then
+			useconds=$((useconds + 1000000))
+			seconds=$((seconds - 1))
+		fi
+
+		if ((seconds < 15)); then
+			if ((${#useconds} > 3)); then
+				REPLY="${seconds}s ${useconds::-3}ms"
+			else
+				REPLY="${seconds}s ${useconds}us"
+			fi
 			return 0
 		fi
 
-		local seconds=$((timediff % 60))
-		local minutes=$((timediff / 60 % 60))
-		local hours=$((timediff / 3600 % 60))
+		local minutes=$((seconds_diff / 60 % 60))
+		local hours=$((seconds_diff / 3600 % 60))
 
 		REPLY="${seconds}s"
-
 		if ((minutes > 0)); then
 			REPLY="${minutes}m $REPLY"
 		fi
-
 		if ((hours > 0)); then
 			REPLY="${hours}h $REPLY"
 		fi
@@ -588,20 +601,17 @@ __bake_main() {
 
 	if declare -f task."$__bake_task" >/dev/null 2>&1; then
 		__bake_parse_task_comments "$__bake_task"
-
 		__bake_print_big "-> RUNNING TASK '$__bake_task'"
+		__bake_time_prepare
 
 		if declare -f init >/dev/null 2>&1; then
 			init "$__bake_task"
 		fi
 
-		__bake_time_prepare
-
 		# Do NOT 'if task.*; then :; else handleIt; fi'
 		task."$__bake_task" "${__bake_args_userflags[@]}"
 
 		__bake_print_big --show-time "<- DONE"
-
 		exit 0
 	else
 		__bake_internal_error "Task '$__bake_task' not found"
